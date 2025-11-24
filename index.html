@@ -1441,7 +1441,7 @@
     starmapListEl.textContent = "Loading starmaps...";
     try {
       const resp = await fetch(
-        "http://xtdevelopment.net/chat-proxy/starmaps/starmaps.php",
+        "https://xtdevelopment.net/chat-proxy/starmaps/starmaps.php",
         { cache: "no-store" }
       );
       if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
