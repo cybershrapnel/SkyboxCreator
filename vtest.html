@@ -274,29 +274,6 @@
   padding:0 4px;
 }
 
-/* ✅ NEW minimap hover bar */
-#minimapHoverBar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding: 4px 8px;
-  font-size: 11px;
-  color:#ddd;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  background: rgba(20,20,28,0.85);
-}
-#minimapHoverName{
-  color:#cfe3ff;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width: 190px;
-}
-#minimapHoverDist{
-  color:#9fb8a2;
-  white-space:nowrap;
-}
-
 #minimapCanvas{
   width: 280px;
   height: 280px;
@@ -331,6 +308,212 @@
   margin-top:2px;
 }
 
+/* ✅ hover info bar above minimap */
+#minimapHoverBar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px 10px 0 10px;
+  font-size:11px;
+  color:#ddd;
+}
+#minimapHoverName{
+  color:#cfe3ff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:180px;
+}
+#minimapHoverDist{
+  color:#9fb8a2;
+  white-space:nowrap;
+}
+
+/* ============================
+   Visited Objects panel
+   ============================ */
+#visitedContainer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  font-size: 12px;
+}
+#visitedHeader {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #ff9fe8;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+#visitedList {
+  max-height: 190px;
+  overflow-y: auto;
+  border: 1px solid #333;
+  background: rgba(0,0,0,0.35);
+  padding: 4px;
+  border-radius: 4px;
+}
+.visited-item {
+  padding: 4px 6px;
+  margin: 2px 0;
+  cursor: pointer;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.05);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+}
+.visited-item:hover {
+  background: rgba(255,160,240,0.18);
+}
+.visited-name {
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  flex:1;
+}
+.visited-dist {
+  font-size: 11px;
+  color:#d8a9cf;
+  white-space:nowrap;
+}
+.visited-empty {
+  color:#888;
+  font-size:11px;
+  padding:4px 6px;
+}
+
+/* ============================
+   Visit Details draggable popup
+   ============================ */
+#visitDetailsPopup{
+  position: fixed;
+  top: 140px;
+  left: 640px;
+  width: 360px;
+  background: rgba(10,10,14,0.98);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  z-index: 10000;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  display:none;
+  user-select:none;
+}
+#visitDetailsHeader{
+  cursor: move;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffd6fb;
+  background: rgba(90,40,80,0.30);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+#visitDetailsClose{
+  border:none;
+  background: transparent;
+  color:#fff;
+  font-size:16px;
+  line-height:16px;
+  cursor:pointer;
+  padding:0 4px;
+}
+
+#visitDetailsBody{
+  padding: 8px 10px 10px 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+  font-size: 12px;
+  color: #ddd;
+}
+
+.vd-section{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding:3px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.06);
+}
+.vd-section:last-child{ border-bottom:none; }
+.vd-label{ color:#bbb; }
+
+.vd-subheader{
+  margin-top:8px;
+  font-size:11px;
+  font-weight:bold;
+  color:#b6ffa8;
+  letter-spacing:0.3px;
+  text-transform:uppercase;
+}
+
+.vd-planets{
+  margin-top:4px;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:4px;
+  background: rgba(0,0,0,0.3);
+  padding:4px;
+  max-height: 240px;
+  overflow-y:auto;
+}
+
+.vd-planet-row{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding:3px 4px;
+  margin:2px 0;
+  border-radius:3px;
+  background: rgba(255,255,255,0.05);
+}
+.vd-planet-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  flex:1;
+}
+.vd-planet-type{
+  font-size:11px;
+  color:#9fb8a2;
+  white-space:nowrap;
+}
+
+.vd-planet-stats{
+  margin:2px 0 6px 8px;
+  font-size:11px;
+  color:#cfcfcf;
+  line-height:1.35;
+}
+
+#visitRenameRow{
+  margin-top:10px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+#visitRenameInput{
+  flex:1;
+  font-size:12px;
+  padding:4px 6px;
+  background: rgba(0,0,0,0.6);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.18);
+  border-radius:4px;
+}
+#visitRenameBtn{
+  font-size:12px;
+  padding:4px 8px;
+  cursor:pointer;
+}
+#visitRenameMsg{
+  margin-top:6px;
+  font-size:11px;
+  color:#ffd28a;
+}
     
   </style>
 </head>
@@ -374,6 +557,14 @@
             <!-- ✅ NEW travel stats -->
   <div class="stat-row"><span class="stat-label">Total distance traveled</span><span class="stat-value" id="statTotalDistanceLy">0.000 ly</span></div>
   <div class="stat-row"><span class="stat-label">Avg distance per hour</span><span class="stat-value" id="statAvgLyPerHour">0.000 ly/h</span></div>
+        </div>
+      </div>
+
+      <!-- ✅ Visited objects panel lives here -->
+      <div id="visitedContainer">
+        <div id="visitedHeader">Visited Stars / Planets</div>
+        <div id="visitedList">
+          <div class="visited-empty">No visits yet…</div>
         </div>
       </div>
     </div>
@@ -558,7 +749,7 @@
     <button id="minimapClose" title="Close">×</button>
   </div>
 
-  <!-- ✅ NEW hover readout above minimap -->
+  <!-- ✅ hover info line above minimap -->
   <div id="minimapHoverBar">
     <span id="minimapHoverName">Hover a star…</span>
     <span id="minimapHoverDist"></span>
@@ -572,6 +763,27 @@
     <button id="minimapRotate" title="Rotate axis plane">Rotate Axis</button>
     <span id="minimapAxisLabel">XY</span>
     <div id="minimapHint">Click a star dot to jump to it in 3D (works best when zoomed in).</div>
+  </div>
+</div>
+
+<!-- ==========================
+     Draggable Visit Details Popup
+     ========================== -->
+<div id="visitDetailsPopup">
+  <div id="visitDetailsHeader">
+    <span id="visitDetailsTitle">Visited Object</span>
+    <button id="visitDetailsClose" title="Close">×</button>
+  </div>
+
+  <div id="visitDetailsBody">
+    <div id="visitDetailsContent"></div>
+
+    <div id="visitRenameRow">
+      <input id="visitRenameInput" type="text" placeholder="Rename this object">
+      <button id="visitRenameBtn">Rename</button>
+    </div>
+
+    <div id="visitRenameMsg"></div>
   </div>
 </div>
   
@@ -1533,6 +1745,268 @@ function updateCatalogStats() {
   
 }
 
+/* ===========================================================
+   ✅ Visited Objects Log + Details Popup
+   - Records every star/planet selected
+   - Stores hop distance (ly)
+   - Click item opens draggable details popup
+   - Mock rename updates UI only
+   =========================================================== */
+
+const visitedListEl = document.getElementById("visitedList");
+
+let visitedLog = [];      // ordered unique
+let visitedById = {};     // primaryId -> entry
+
+function getDisplayNameFromData(data){
+  if (!data) return "Unnamed Object";
+  return data.properName || data.name || ("Object " + data.primaryId);
+}
+
+// leg distance in ly between any two meshes
+function computeLegLy(prevMesh, newMesh){
+  if (!prevMesh || !newMesh) return 0;
+  const a = getRawOf(prevMesh);
+  const b = getRawOf(newMesh);
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const dz = b.z - a.z;
+  const d = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  return isFinite(d) ? d : 0;
+}
+
+function addVisitedEntry(mesh, legLy){
+  if (!mesh || !mesh.objectData) return;
+
+  const data = mesh.objectData;
+  const pid = String(data.primaryId);
+
+  if (!visitedById[pid]) {
+    visitedById[pid] = {
+      primaryId: pid,
+      type: data.type || "OBJECT",
+      name: getDisplayNameFromData(data),
+      meshRef: mesh,
+      legLy: legLy || 0
+    };
+    visitedLog.push(visitedById[pid]);
+  } else {
+    // refresh name + last hop distance
+    visitedById[pid].name = getDisplayNameFromData(data);
+    visitedById[pid].meshRef = mesh;
+    visitedById[pid].legLy = legLy || visitedById[pid].legLy;
+  }
+
+  renderVisitedList();
+}
+
+function renderVisitedList(){
+  if (!visitedListEl) return;
+
+  visitedListEl.innerHTML = "";
+
+  if (!visitedLog.length) {
+    visitedListEl.innerHTML = '<div class="visited-empty">No visits yet…</div>';
+    return;
+  }
+
+  visitedLog.forEach((e, idx) => {
+    const row = document.createElement("div");
+    row.className = "visited-item";
+    row.dataset.primaryId = e.primaryId;
+
+    const n = document.createElement("span");
+    n.className = "visited-name";
+    n.textContent = (idx + 1) + ". " + e.name;
+
+    const d = document.createElement("span");
+    d.className = "visited-dist";
+    d.textContent = prettyLy(e.legLy);
+
+    row.appendChild(n);
+    row.appendChild(d);
+
+    row.onclick = () => openVisitDetails(e.primaryId);
+
+    visitedListEl.appendChild(row);
+  });
+}
+
+/* ============================
+   Visit Details Popup
+   ============================ */
+
+const visitDetailsPopup   = document.getElementById("visitDetailsPopup");
+const visitDetailsTitleEl = document.getElementById("visitDetailsTitle");
+const visitDetailsCloseEl = document.getElementById("visitDetailsClose");
+const visitDetailsContentEl = document.getElementById("visitDetailsContent");
+
+const visitRenameInputEl  = document.getElementById("visitRenameInput");
+const visitRenameBtnEl    = document.getElementById("visitRenameBtn");
+const visitRenameMsgEl    = document.getElementById("visitRenameMsg");
+
+let detailsTargetMesh = null;
+
+function openVisitDetails(primaryId){
+  const pid = String(primaryId);
+  const entry = visitedById[pid];
+
+  const mesh =
+    (entry && entry.meshRef) ||
+    starsByID[pid] ||
+    (currentSystem && currentSystem.objectsByID && currentSystem.objectsByID[pid]) ||
+    stars.find(s => s && s.objectData && String(s.objectData.primaryId) === pid);
+
+  if (!mesh || !mesh.objectData) return;
+
+  detailsTargetMesh = mesh;
+  fillVisitDetails(mesh);
+
+  if (visitDetailsPopup) visitDetailsPopup.style.display = "block";
+}
+
+function closeVisitDetails(){
+  if (visitDetailsPopup) visitDetailsPopup.style.display = "none";
+  detailsTargetMesh = null;
+}
+
+if (visitDetailsCloseEl) visitDetailsCloseEl.addEventListener("click", closeVisitDetails);
+
+function fillVisitDetails(mesh){
+  const data = mesh.objectData || {};
+  const title = getDisplayNameFromData(data);
+
+  if (visitDetailsTitleEl) visitDetailsTitleEl.textContent = title;
+  if (visitRenameInputEl) visitRenameInputEl.value = title;
+  if (visitRenameMsgEl) visitRenameMsgEl.textContent = "";
+
+  if (!visitDetailsContentEl) return;
+
+  let html = "";
+
+  // STAR / VIRTUAL_STAR system view
+  if (data.type === "STAR" || data.type === "VIRTUAL_STAR") {
+    const plist = planetsByStarID[data.primaryId] || [];
+
+    html += `<div class="vd-section"><div class="vd-label">Type</div><div>${data.type}</div></div>`;
+    html += `<div class="vd-section"><div class="vd-label">Distance (Sol)</div><div>${getValue(data,'solDistance') || "Unknown"}</div></div>`;
+    html += `<div class="vd-section"><div class="vd-label">Planets in system</div><div>${plist.length}</div></div>`;
+
+    if (plist.length) {
+      html += `<div class="vd-subheader">Planets</div>`;
+      html += `<div class="vd-planets">`;
+
+      plist.forEach((p, i) => {
+        const pname = p.properName || p.name || (`Planet ${i+1}`);
+        const ptype = p.type || "PLANET";
+
+        html += `
+          <div class="vd-planet-row">
+            <span class="vd-planet-name">${pname}</span>
+            <span class="vd-planet-type">${ptype}</span>
+          </div>
+        `;
+
+        const mass = getValue(p, "massKg");
+        const dens = getValue(p, "densityGcc");
+        const orb  = getValue(p, "orbitalPeriodDays");
+        const sma  = getValue(p, "semiMajorAxisLys");
+
+        if ((mass && mass !== "Unknown") ||
+            (dens && dens !== "Unknown") ||
+            (orb  && orb  !== "Unknown") ||
+            (sma  && sma  !== "Unknown")) {
+
+          html += `<div class="vd-planet-stats">`;
+          if (mass && mass !== "Unknown") html += `<div>Mass: ${mass}</div>`;
+          if (dens && dens !== "Unknown") html += `<div>Density: ${dens}</div>`;
+          if (orb  && orb  !== "Unknown") html += `<div>Orbital Period: ${orb}</div>`;
+          if (sma  && sma  !== "Unknown") html += `<div>Semi-Major Axis: ${sma}</div>`;
+          html += `</div>`;
+        }
+      });
+
+      html += `</div>`;
+    }
+  }
+  // PLANET / MOON view
+  else {
+    html += `<div class="vd-section"><div class="vd-label">Type</div><div>${data.type || "PLANET"}</div></div>`;
+    html += `<div class="vd-section"><div class="vd-label">Name</div><div>${title}</div></div>`;
+
+    const fields = [
+      ["Mass", "massKg"],
+      ["Density", "densityGcc"],
+      ["Orbital Period", "orbitalPeriodDays"],
+      ["Semi-Major Axis", "semiMajorAxisLys"],
+      ["Inclination", "inclination"]
+    ];
+
+    fields.forEach(([lab, key]) => {
+      const val = getValue(data, key);
+      if (val && val !== "Unknown" && val !== "?") {
+        html += `<div class="vd-section"><div class="vd-label">${lab}</div><div>${val}</div></div>`;
+      }
+    });
+
+    if (data.starId) {
+      const parentStar = starsByID[data.starId];
+      if (parentStar && parentStar.objectData) {
+        html += `<div class="vd-section"><div class="vd-label">Parent Star</div><div>${getDisplayNameFromData(parentStar.objectData)}</div></div>`;
+      }
+    }
+  }
+
+  visitDetailsContentEl.innerHTML = html;
+}
+
+// Mock rename
+if (visitRenameBtnEl) {
+  visitRenameBtnEl.addEventListener("click", function(){
+    if (!detailsTargetMesh || !detailsTargetMesh.objectData) return;
+
+    const newName = (visitRenameInputEl && visitRenameInputEl.value || "").trim();
+    if (!newName) return;
+
+    const data = detailsTargetMesh.objectData;
+    const pid  = String(data.primaryId);
+
+    // Update objectData name (mock only)
+    data.properName = newName;
+    data.name = newName;
+
+    // If currently selected, update header
+    if (currentObjectMesh && currentObjectMesh.objectData &&
+        String(currentObjectMesh.objectData.primaryId) === pid) {
+      $('#info-header').text(newName);
+    }
+
+    // Update visited log label
+    if (visitedById[pid]) visitedById[pid].name = newName;
+
+    // Refresh stars autocomplete + any name lists
+    if (data.type === "STAR" || data.type === "VIRTUAL_STAR") {
+      updateobjectData();
+    }
+
+    renderVisitedList();
+    fillVisitDetails(detailsTargetMesh);
+
+    if (visitRenameMsgEl) {
+      visitRenameMsgEl.textContent =
+        "In the future renaming and buying an object will cost $NCZ tokens.";
+    }
+  });
+}
+
+// Make visit details popup draggable
+$(function(){
+  $("#visitDetailsPopup").draggable({
+    handle: "#visitDetailsHeader",
+    containment: "window"
+  });
+});
+
 
   function select(mesh, opts) {
     if (!mesh) return;
@@ -1570,6 +2044,7 @@ function updateCatalogStats() {
 
     if (newTarget != null) {
       var newTargetPrimaryId = newTarget.primaryId;
+      const legLyForVisit = computeLegLy(currentObjectMesh, mesh); // ✅ distance for visit log
 
       if (newTargetPrimaryId != currentObjectPrimaryId) {
         $('#info-header').text(newTarget.properName);
@@ -1620,6 +2095,8 @@ function updateCatalogStats() {
         updateLineOfSightList(currentObjectMesh);
         updateNearestStarsList(currentObjectMesh);
         updateCatalogStats();
+
+        addVisitedEntry(mesh, legLyForVisit); // ✅ log actual visit
       }
     }
   }
@@ -2180,14 +2657,10 @@ const minimapCanvas = document.getElementById("minimapCanvas");
 const mmCtx         = minimapCanvas ? minimapCanvas.getContext("2d") : null;
 const axisLabelEl   = document.getElementById("minimapAxisLabel");
 
-/* ✅ NEW minimap hover HUD elements */
+// ✅ hover bar elements
 const minimapHoverNameEl = document.getElementById("minimapHoverName");
 const minimapHoverDistEl = document.getElementById("minimapHoverDist");
-
-function clearMinimapHover(){
-  if (minimapHoverNameEl) minimapHoverNameEl.textContent = "Hover a star…";
-  if (minimapHoverDistEl) minimapHoverDistEl.textContent = "";
-}
+let minimapHoverPid = null;
 
 function getRawOf(mesh){
   if (!mesh) return {x:0,y:0,z:0};
@@ -2289,16 +2762,20 @@ function maybeDrawMinimap(){
   }
 }
 
-/* ✅ NEW minimap hover detector */
+// ✅ hover handler for minimap
+function clearMinimapHover(){
+  minimapHoverPid = null;
+  if (minimapHoverNameEl) minimapHoverNameEl.textContent = "Hover a star…";
+  if (minimapHoverDistEl) minimapHoverDistEl.textContent = "";
+  if (minimapCanvas) minimapCanvas.style.cursor = "default";
+}
+
 function updateMinimapHover(ev){
   if (!minimapOpen || !minimapCanvas) return;
 
   const rect = minimapCanvas.getBoundingClientRect();
-  const scaleX = minimapCanvas.width  / rect.width;
-  const scaleY = minimapCanvas.height / rect.height;
-
-  const cx = (ev.clientX - rect.left) * scaleX - minimapCanvas.width/2;
-  const cy = (ev.clientY - rect.top)  * scaleY - minimapCanvas.height/2;
+  const cx = ev.clientX - rect.left - rect.width/2;
+  const cy = ev.clientY - rect.top  - rect.height/2;
 
   const plane  = minimapPlanes[minimapPlaneIndex];
   const center = getMinimapCenterRaw();
@@ -2323,17 +2800,22 @@ function updateMinimapHover(ev){
   const HOVER_THRESH_PX = 8;
 
   if (best && bestPx <= HOVER_THRESH_PX) {
-    const data = best.objectData;
-    const name = data.properName || ("Star " + data.primaryId);
+    const pid = String(best.objectData.primaryId);
+    if (pid !== minimapHoverPid) {
+      minimapHoverPid = pid;
+      const name = best.objectData.properName || ("Star " + pid);
 
-    const rawB = getRawOf(best);
-    const dx = rawB.x - center.x;
-    const dy = rawB.y - center.y;
-    const dz = rawB.z - center.z;
-    const dist3d = Math.sqrt(dx*dx + dy*dy + dz*dz);
+      // 3D dist from minimap center in ly
+      const raw = getRawOf(best);
+      const dx3 = raw.x - center.x;
+      const dy3 = raw.y - center.y;
+      const dz3 = raw.z - center.z;
+      const dist3 = Math.sqrt(dx3*dx3 + dy3*dy3 + dz3*dz3);
 
-    if (minimapHoverNameEl) minimapHoverNameEl.textContent = name;
-    if (minimapHoverDistEl) minimapHoverDistEl.textContent = prettyLy(dist3d);
+      if (minimapHoverNameEl) minimapHoverNameEl.textContent = name;
+      if (minimapHoverDistEl) minimapHoverDistEl.textContent = prettyLy(dist3);
+    }
+    minimapCanvas.style.cursor = "pointer";
   } else {
     clearMinimapHover();
   }
@@ -2375,7 +2857,7 @@ if (minimapCanvas) {
     }
   });
 
-  /* ✅ NEW hover listeners */
+  // ✅ hover events
   minimapCanvas.addEventListener("mousemove", updateMinimapHover);
   minimapCanvas.addEventListener("mouseleave", clearMinimapHover);
 }
@@ -2390,13 +2872,13 @@ const mmRotateBtn      = document.getElementById("minimapRotate");
 function openMinimap(){
   minimapOpen = true;
   if (minimapPopup) minimapPopup.style.display = "block";
+  clearMinimapHover();
   drawMinimap();
-  clearMinimapHover(); // ✅ reset hover bar on open
 }
 function closeMinimap(){
   minimapOpen = false;
+  clearMinimapHover();
   if (minimapPopup) minimapPopup.style.display = "none";
-  clearMinimapHover(); // ✅ clear hover bar on close
 }
 function toggleMinimap(){
   if (minimapOpen) closeMinimap();
@@ -2421,6 +2903,7 @@ if (mmZoomOutBtn) {
 if (mmRotateBtn) {
   mmRotateBtn.addEventListener("click", function(){
     minimapPlaneIndex = (minimapPlaneIndex + 1) % minimapPlanes.length;
+    clearMinimapHover();
     drawMinimap();
   });
 }
@@ -2432,8 +2915,6 @@ $(function(){
     containment: "window"
   });
 });
-
-
   
 </script>
   
