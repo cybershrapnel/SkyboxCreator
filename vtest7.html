@@ -2054,52 +2054,60 @@
     return isFinite(d) ? d : 0;
   }
 
-  function addVisitedEntry(mesh, legLy){
-    if (!mesh || !mesh.objectData) return;
+function addVisitedEntry(mesh, legLy){
+  if (!mesh || !mesh.objectData) return;
 
-    const data = mesh.objectData;
-    const pid = String(data.primaryId);
-    const isStarType = (data.type === "STAR" || data.type === "VIRTUAL_STAR");
+  const data = mesh.objectData;
+  const pid = String(data.primaryId);
 
-    if (!visitedById[pid]) {
-      visitedById[pid] = {
-        primaryId: pid,
-        type: data.type || "OBJECT",
-        isStar: isStarType,
-        name: getDisplayNameFromData(data),
-        meshRef: mesh,
-        legLy: legLy || 0,
-        starId: data.starId || null
-      };
-      visitedLog.push(visitedById[pid]);
-    } else {
-      visitedById[pid].name = getDisplayNameFromData(data);
-      visitedById[pid].meshRef = mesh;
-      visitedById[pid].legLy = legLy || visitedById[pid].legLy;
-      visitedById[pid].isStar = isStarType;
-      visitedById[pid].type = data.type || visitedById[pid].type;
-      visitedById[pid].starId = data.starId || visitedById[pid].starId || null;
-    }
+  // ✅ INCLUDE virtual stars as stars
+  const isStarType = (data.type === "STAR" || data.type === "VIRTUAL_STAR");
 
-    renderVisitedList();
+  if (!visitedById[pid]) {
+    visitedById[pid] = {
+      primaryId: pid,
+      type: data.type || "OBJECT",
+      isStar: isStarType,
+      name: getDisplayNameFromData(data),
+      meshRef: mesh,
+      legLy: legLy || 0
+    };
+    visitedLog.push(visitedById[pid]);
+  } else {
+    visitedById[pid].name = getDisplayNameFromData(data);
+    visitedById[pid].meshRef = mesh;
+    visitedById[pid].legLy = legLy || visitedById[pid].legLy;
+    visitedById[pid].isStar = isStarType;
+    visitedById[pid].type = data.type || visitedById[pid].type;
   }
 
-  function renderVisitedList(){
-    if (!visitedListEl) return;
+  renderVisitedList();
+}
 
-    const hideStars = !!(hideVisitedStarsEl && hideVisitedStarsEl.checked);
-    const hidePlanets = !!(hideVisitedPlanetsEl && hideVisitedPlanetsEl.checked);
-    const hideVirtual = !!(hideVisitedVirtualStarsEl && hideVisitedVirtualStarsEl.checked);
 
-    visitedListEl.innerHTML = "";
+const hideVirtualStarsEl = document.getElementById("hideVisitedVirtualStars");
 
-    const filtered = visitedLog.filter(e => {
-      if (!isEntryInRenderRange(e)) return false;
-      if (e.isStar && e.type === "VIRTUAL_STAR" && hideVirtual) return false;
-      if (e.isStar && e.type !== "VIRTUAL_STAR" && hideStars) return false;
-      if (!e.isStar && hidePlanets) return false;
-      return true;
-    });
+function renderVisitedList(){
+  if (!visitedListEl) return;
+
+  const hideStars   = !!(hideVisitedStarsEl && hideVisitedStarsEl.checked);
+  const hidePlanets = !!(hideVisitedPlanetsEl && hideVisitedPlanetsEl.checked);
+  const hideVirtual = !!(hideVirtualStarsEl && hideVirtualStarsEl.checked);
+
+  visitedListEl.innerHTML = "";
+
+  const filtered = visitedLog.filter(e => {
+    // ✅ don’t show anything outside render radius
+    if (e.meshRef && e.meshRef.objectData && !isRender(e.meshRef.objectData)) return false;
+
+    if (e.isStar && hideStars) return false;
+    if (!e.isStar && hidePlanets) return false;
+
+    // ✅ hide virtual only at display time
+    if (e.type === "VIRTUAL_STAR" && hideVirtual) return false;
+
+    return true;
+  });
 
     if (!filtered.length) {
       visitedListEl.innerHTML = '<div class="visited-empty">No visits yet…</div>';
