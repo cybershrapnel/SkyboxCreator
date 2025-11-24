@@ -2096,18 +2096,17 @@ function renderVisitedList(){
 
   visitedListEl.innerHTML = "";
 
-  const filtered = visitedLog.filter(e => {
-    // ✅ don’t show anything outside render radius
-    if (e.meshRef && e.meshRef.objectData && !isRender(e.meshRef.objectData)) return false;
+const filtered = visitedLog.filter(e => {
+  // ✅ don’t show anything outside render radius (safe for stars AND planets)
+  if (!isEntryInRenderRange(e)) return false;
 
-    if (e.isStar && hideStars) return false;
-    if (!e.isStar && hidePlanets) return false;
+  if (e.isStar && hideStars) return false;
+  if (!e.isStar && hidePlanets) return false;
 
-    // ✅ hide virtual only at display time
-    if (e.type === "VIRTUAL_STAR" && hideVirtual) return false;
+  if (e.type === "VIRTUAL_STAR" && hideVirtual) return false;
 
-    return true;
-  });
+  return true;
+});
 
     if (!filtered.length) {
       visitedListEl.innerHTML = '<div class="visited-empty">No visits yet…</div>';
