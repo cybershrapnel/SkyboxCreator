@@ -25,40 +25,25 @@
   <script src="js/RollingAverage.js"></script>
   <script src="js/PlanetBuilder.js"></script>
   <script src="resources/Detector.js"></script>
-
   <style>
-    /* small local-loader panel */
-    #localCatalogPanel {
-      position: fixed;
-      top: 8px;
-      right: 8px;
-      z-index: 9999;
-      background: rgba(0,0,0,0.75);
-      color: #ddd;
-      border: 1px solid #222;
-      padding: 8px;
-      font-family: monospace;
-      font-size: 12px;
-      border-radius: 4px;
-      max-width: 280px;
+    #catalogStatus {
+      font-size: 11px;
+      line-height: 1.3;
+      margin-top: 6px;
+      color: #cfcfcf;
+      word-break: break-word;
     }
-    #localCatalogPanel button { margin-top: 6px; }
-    #localCatalogStatus { margin-top: 6px; color: #8f8; }
+    .catalog-btn {
+      margin: 4px 0;
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
-
-<!-- LOCAL FILE LOADER (no server upload, purely client-side) -->
-<div id="localCatalogPanel">
-  <div><b>Load local star_catalog.txt</b></div>
-  <input type="file" id="localCatalogFile" accept=".txt,.json" />
-  <div>
-    <button id="localCatalogLoadBtn">Load Into Skybox</button>
-    <button id="localCatalogClearBtn">Clear Local</button>
-  </div>
-  <div id="localCatalogStatus">Using server default catalog.</div>
-</div>
 
 <div>
   <div id="selector">
@@ -76,158 +61,118 @@
         <label for="jump_to_list">Search: </label>
         <input id="jump_to_list" type="text">
       </div>
-
     </div>
-    
-       <h3>MEQUAVIS Location Data</h3>
+
+    <h3>MEQUAVIS Location Data</h3>
     <div class="overlay-panel">
       <div class="ui-widget">
         <font size=2>Current Phase Layer Location:</font> <br />1@2.1.1.1.1.1:0<br /><br />
- 
         <input id="jump_to_list" type="text">
-<br />
-       <font size=1><center> Obtain a valid MEQUAVIS hyperstack<br />
+        <br />
+        <font size=1><center> Obtain a valid MEQUAVIS hyperstack<br />
                              address from the NanoCheeZe JAVA app<br />
                              hint: There is only 1 active layer atm</center></font>
       </div>
-
     </div>
-    
-        <h3>Load and View in VR</h3>
+
+    <h3>Load and View in VR</h3>
     <div class="overlay-panel">
       <div class="ui-widget">
         <a href="https://xtdevelopment.net/babylon">Launch in VR</a><br />
       </div>
     </div>
 
+    <h3>Catalog</h3>
+    <div class="overlay-panel">
+      <div class="ui-widget">
+        <button id="loadCatalogBtn" class="catalog-btn">Load Local star_catalog.txt</button>
+        <button id="clearCatalogBtn" class="catalog-btn">Clear Local Catalog</button>
+        <input id="catalogFileInput" type="file" accept=".txt,.json,application/json,text/plain" style="display:none;">
+        <div id="catalogStatus">Using server catalog.</div>
+      </div>
+    </div>
+
     <h3>View</h3>
     <div class="overlay-panel">
-
       <table>
         <tbody>
-
         <tr class="header-row overlay-header">
-          
-          <td>
-            <b>Control Mode</b>
-          </td>
+          <td><b>Control Mode</b></td>
         </tr>
-
         <tr class="child-row">
           <td>
             <form id="control_mode" name="control_mode" action="#" method="POST">
               <div>
-                <label>
-                  <input type="radio" name="control_mode" value="orbit" checked>
-                </label> Orbit
-                <label>
-                  <input type="radio" name="control_mode" value="free">
-                </label> Free Look
+                <label><input type="radio" name="control_mode" value="orbit" checked></label> Orbit
+                <label><input type="radio" name="control_mode" value="free"></label> Free Look
               </div>
             </form>
           </td>
-       
-
         </tr>
 
-   <tr class="header-row overlay-header">
-          <td>
-            <b>Virtual Stars</b>
-          </td>
+        <tr class="header-row overlay-header">
+          <td><b>Virtual Stars</b></td>
         </tr>
-
-          
         <tr class="child-row">
           <td>
-    <input type="checkbox" id="virtual_stars_checkbox" name="virtual_stars"> Enable Virtual Stars
-<div>
-  <button id="autoExploreButton">Toggle Auto Explore</button>
-</div>
+            <input type="checkbox" id="virtual_stars_checkbox" name="virtual_stars"> Enable Virtual Stars
+            <div>
+              <button id="autoExploreButton">Toggle Auto Explore</button>
+            </div>
           </td>
-
-
         </tr>
-          
+
         <tr class="header-row overlay-header">
-          <td>
-            <b>Render Radius (Sol lys)</b>
-          </td>
+          <td><b>Render Radius (Sol lys)</b></td>
         </tr>
-
         <tr class="child-row">
           <td>
             <form id="render_radius" name="render_radius" action="#" method="POST">
               <div>
-                <label>
-                  <input type="radio" name="render_radius" value="10">
-                </label> 10
-                <label>
-                  <input type="radio" name="render_radius" value="25">
-                </label> 25
-                <label>
-                  <input type="radio" name="render_radius" value="50">
-                </label> 50
-                   </div>
-                <div>
-                <label>
-                  <input type="radio" name="render_radius" value="75" checked>
-                </label> 75
-                <label>
-                  <input type="radio" name="render_radius" value="150">
-                </label> 150
-                 <label>
-                  <input type="radio" name="render_radius" value="200">
-                </label> 200
+                <label><input type="radio" name="render_radius" value="10"></label> 10
+                <label><input type="radio" name="render_radius" value="25"></label> 25
+                <label><input type="radio" name="render_radius" value="50"></label> 50
+              </div>
+              <div>
+                <label><input type="radio" name="render_radius" value="75" checked></label> 75
+                <label><input type="radio" name="render_radius" value="150"></label> 150
+                <label><input type="radio" name="render_radius" value="200"></label> 200
               </div>
             </form>
           </td>
         </tr>
 
         <tr class="header-row overlay-header">
-          <td>
-            <b>Highlight</b>
-          </td>
+          <td><b>Highlight</b></td>
         </tr>
-
         <tr class="child-row">
           <td>
             <form id="highlight_mode" name="highlight_mode" action="#" method="POST">
               <div>
-                <label>
-                  <input type="radio" name="highlight_mode" value="none" checked>
-                </label> None
-                <label>
-                  <input type="radio" name="highlight_mode" value="exoplanets">
-                </label> Exoplanets
-                <label>
-                  <input type="radio" name="highlight_mode" value="all">
-                </label> All
+                <label><input type="radio" name="highlight_mode" value="none" checked></label> None
+                <label><input type="radio" name="highlight_mode" value="exoplanets"></label> Exoplanets
+                <label><input type="radio" name="highlight_mode" value="all"></label> All
               </div>
             </form>
           </td>
         </tr>
-
         </tbody>
       </table>
     </div>
-
   </div>
 
   <div id="attribution-overlay">
-   <span id="page-counter"></span><br />
+    <span id="page-counter"></span><br />
     <a href="http://nanocheeze.com">NanoCheeZe.com</a><br />
-   
   </div>
 
   <canvas id='webgl_canvas'></canvas>
 </div>
 
 <script>
-  // Encode the current page's URL
   const pageURL = encodeURIComponent(window.location.href);
   const counterURL = `https://www.xtdevelopment.net/hits/index.php?page=${pageURL}`;
 
-  // Fetch the hit count from the server
   fetch(counterURL)
       .then(response => response.json())
       .then(data => {
@@ -242,20 +187,18 @@
           document.getElementById('page-counter').textContent = 'Visit count unavailable';
       });
 
-  // Array to store virtual stars
   let virtualStars = [];
 
   function createVirtualStars() {
-    const numStars = (100*renderRadius)-900; // Adjust for the desired number of virtual stars
-    const maxDistance = renderRadius * 12; // Set max distance for virtual stars based on render radius
+    const numStars = (100*renderRadius)-900;
+    const maxDistance = renderRadius * 12;
 
     for (let i = 0; i < numStars; i++) {
       const randomX = Math.random() * maxDistance - maxDistance / 2;
       const randomY = Math.random() * maxDistance - maxDistance / 2;
       const randomZ = Math.random() * maxDistance - maxDistance / 2;
 
-      // Outer clickable virtual star
-      const clickableGeometry = new THREE.SphereGeometry(0.3, 8, 8); // Larger size for easier clicking
+      const clickableGeometry = new THREE.SphereGeometry(0.3, 8, 8);
       const starMaterial = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         opacity: 0.8,
@@ -264,7 +207,6 @@
       const virtualStar = new THREE.Mesh(clickableGeometry, starMaterial);
       virtualStar.position.set(randomX, randomY, randomZ);
 
-      // Inner planet
       const planetGeometry = new THREE.SphereGeometry(0.05, 8, 8);
 
       const getRandomColor = () => {
@@ -292,7 +234,6 @@
       innerPlanet.position.set(0, 0, 0);
       virtualStar.add(innerPlanet);
 
-      // Moon
       const moonGeometry = new THREE.SphereGeometry(0.005, 8, 8);
       const moonMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
       const moon = new THREE.Mesh(moonGeometry, moonMaterial);
@@ -301,7 +242,6 @@
       moon.objectData = { type: "MOON" };
       innerPlanet.add(moon);
 
-      // Assign default properties to the virtual star
       virtualStar.objectData = {
         primaryId: `virtual_star_${i}`,
         properName: `Virtual Star ${i + 1}`,
@@ -339,7 +279,6 @@
 </script>
 
 <script>
-
   $(function () {
     $("#selector").accordion({
       collapsible: true,
@@ -432,7 +371,6 @@
   scene.add(solMarker.mesh);
   scene.add(selector.mesh);
 
-  // other data
   var starData;
   var planetData;
 
@@ -478,38 +416,31 @@
   });
 
   function updateTarget(prevStarMesh) {
-
     var prevControlMode = controlMode;
     controlMode = 'tween';
 
     var finalZoom = function (approachTime) {
       return function () {
-
         tweenControls.setZoom(absolutePosition(currentObjectMesh),
             currentObjectMesh.objectData.radius.value.quantity * 10, approachTime,
             function () {
-
               if (isStar(currentObjectMesh)) {
                 currentSystem.populatePlanets();
               }
-
               if (isStar(prevStarMesh)) {
                 prevStarMesh.objectData.nearbyObjectIDs.forEach(function (e) {
                   resetStarScale(starsByID[e]);
                 })
               }
-
               if (!prevControlMode || prevControlMode == 'tween') {
                 controlMode = 'orbit';
               } else {
                 controlMode = prevControlMode
               }
-
               orbitControls.orbit(
                   absolutePosition(currentObjectMesh),
                   currentObjectMesh.objectData.radius.value.quantity * 2
               )
-
             }
         )
       }
@@ -520,7 +451,6 @@
     } else {
       finalZoom(2)();
     }
-
   }
 
   function isStar(mesh) {
@@ -604,7 +534,7 @@
         starMesh.remove(highlight);
       }
     } else if (highlightMode === 'exoplanets' && starMesh.objectData.type === "STAR") {
-      if (planetsByStarID[starMesh.objectData.primaryId][0]) {
+      if (planetsByStarID[starMesh.objectData.primaryId] && planetsByStarID[starMesh.objectData.primaryId][0]) {
         if (!highlight) {
           starMesh.add(createHighlightSprite());
         }
@@ -619,7 +549,6 @@
   }
 
   function updateobjectData() {
-
     var renderedStars = {};
     visibleStars.forEach(function (e) {
       renderedStars[e.objectData.primaryId] = true;
@@ -632,7 +561,7 @@
     stars.forEach(function (starMesh) {
       var data = starMesh.objectData;
       var starID = data.primaryId;
-      var commonName = data.properName;
+      var commonName = data.properName || ("Star " + starID);
       nameList.push(commonName);
       visibleStarsByName[commonName] = starMesh;
 
@@ -649,19 +578,23 @@
       }
     });
 
-    if (currentSystem == null && starsByID[1]) {
-      select(starsByID[1]);
-      if (starsByID[70667]) reassignLabel(starsByID[70667]);
+    if (currentSystem == null) {
+      const defaultStar = starsByID[1] || stars[0];
+      if (defaultStar) {
+        select(defaultStar);
+        const labelStar = starsByID[70667] || stars[1] || defaultStar;
+        if (labelStar) reassignLabel(labelStar);
+      }
     }
     else if (currentSystem && !renderedStars[currentSystem.star.primaryId]) {
-      select(starsByID[1]);
+      const fallback = starsByID[1] || stars[0];
+      if (fallback) select(fallback);
     }
 
     $("#jump_to_list").autocomplete({
       source: nameList,
       minLength: 4
     });
-
   }
 
   function closestNonPrimaryObject(intersects, currentPrimary, currentStarPrimary) {
@@ -721,7 +654,6 @@
       }
 
       var allStars = visibleStars.concat(virtualStars);
-
       var lastStar = closestNonPrimaryObject(
         raycaster.intersectObjects(allStars, false),
         currentObjectPrimaryId,
@@ -783,15 +715,13 @@
   }
 
   function initializeobjectData() {
-
     starData.forEach(function (star) {
-
       var shaderSurround = new THREE.ShaderMaterial({
         vertexShader: shaders.coronaVertexShader,
         fragmentShader: shaders.coronaFragmentShader,
         uniforms: {
           scale: {type: "f", value: 0.0},
-          temp: {type: "f", value: star.temperatureEstimate.value.quantity / 2}
+          temp: {type: "f", value: (star.temperatureEstimate?.value?.quantity || 5000) / 2}
         },
         transparent: true,
         depthWrite: false,
@@ -801,15 +731,12 @@
 
       var surround = new THREE.Mesh(SURROUND_GEOMETRY, shaderSurround);
       surround.objectData = star;
-
       resetStarScale(surround);
       updateHighlight(surround);
 
       surround.position.x = star.cartesianCoordsInLys.x;
       surround.position.y = star.cartesianCoordsInLys.y;
       surround.position.z = star.cartesianCoordsInLys.z;
-
-      surround.objectData = star;
 
       starsByID[star.primaryId] = surround;
       stars.push(surround);
@@ -821,7 +748,6 @@
       if (!planetsByStarID[star]) planetsByStarID[star] = [];
       planetsByStarID[star].push(planet);
     });
-
   }
 
   function createHighlightSprite() {
@@ -853,13 +779,11 @@
 
       if (isStar(mesh)) {
         var offset = mesh.objectData.cartesianCoordsInLys || { x: 0, y: 0, z: 0 };
-
         stars.forEach(function (e) {
           if (e.objectData.cartesianCoordsInLys) {
             setOffset(e.objectData.cartesianCoordsInLys, e.position, offset);
           }
         });
-
         setOffset(currentOffset(camera.position), camera.position, offset);
         setOffset(ZERO, solMarker.mesh.position, offset);
       }
@@ -918,7 +842,7 @@
     if (bayerFlamsteed) {
       return bayerFlamsteed.prettyName;
     }
-    return "";
+    return ""
   }
 
   function isSol(mesh) {
@@ -926,12 +850,10 @@
   }
 
   function updateCurrentTargets(mesh) {
-
     currentObjectMesh = mesh;
     currentObjectPrimaryId = mesh.objectData.primaryId;
 
-    if (mesh.objectData.type == "STAR") {
-
+    if (mesh.objectData.type == "STAR" || mesh.objectData.type == "VIRTUAL_STAR") {
       if (currentSystem && currentSystem.star.objectData.primaryId == mesh.objectData.primaryId) {
         return;
       }
@@ -941,7 +863,7 @@
       currentSystem = new System(
           mesh,
           ZERO,
-          planetsByStarID[mesh.objectData.primaryId],
+          planetsByStarID[mesh.objectData.primaryId] || [],
           solMarker.mesh.position
       );
 
@@ -980,7 +902,6 @@
   }
 
   function formatObjValue(elem) {
-
     var objValue = elem.value;
     var quantity = objValue.quantity;
 
@@ -1008,19 +929,15 @@
   function prettyDensity(gPerCc) {
     return gPerCc.toLocaleString('en-US', {maximumSignificantDigits: 3}) + ' g/cc';
   }
-
   function prettyTemperature(k) {
     return k.toLocaleString('en-US', {maximumSignificantDigits: 3}) + 'K'
   }
-
   function prettyMagnitude(mv) {
     return mv.toLocaleString('en-US', {maximumSignificantDigits: 3}) + 'Mv';
   }
-
   function prettyDegree(degrees) {
     return degrees.toLocaleString('en-US', {maximumSignificantDigits: 3}) + '°';
   }
-
   function prettyMass(mass, qualifier) {
     var str = (mass / 5.9722e24).toLocaleString('en-US', {maximumSignificantDigits: 3}) + ' M⊕';
     if (qualifier == 'Msini') {
@@ -1028,7 +945,6 @@
     }
     return str;
   }
-
   function prettyDistance(lys) {
     if (lys > .01) {
       return lys.toFixed(2) + ' ly';
@@ -1056,7 +972,6 @@
   }
 
   function render() {
-
     var delta = clock.getDelta();
     uniforms.time.value += 0.003 * delta;
 
@@ -1080,8 +995,9 @@
     if (currentSystem) {
       var currentStar = currentSystem.star;
       if (currentStar) {
-        currentStar.objectData.nearbyObjectIDs.forEach(function (e) {
+        (currentStar.objectData.nearbyObjectIDs || []).forEach(function (e) {
           var nearStar = starsByID[e];
+          if (!nearStar) return;
           var distance = camera.position.distanceTo(nearStar.position) * .3;
           var childUniform = nearStar.material.uniforms;
           if (childUniform.scale.value != distance) {
@@ -1120,32 +1036,26 @@
       bind(orbitControls.onMouseMove, freeLookControls.onMouseMove),
       false
   );
-
   canvas.addEventListener('mousedown',
       bind(orbitControls.onMouseDown, freeLookControls.onMouseDown),
       false
   );
-
   canvas.addEventListener('mousewheel',
       bind(orbitControls.onMouseWheel, freeLookControls.onMouseWheel),
       false
   );
-
   canvas.addEventListener('DOMMouseScroll',
       bind(orbitControls.onMouseWheel, freeLookControls.onMouseWheel),
       false
   );
-
   canvas.addEventListener('mouseup',
       bind(orbitControls.onMouseUp, freeLookControls.onMouseUp),
       false
   );
-
   canvas.addEventListener('keydown',
       bind(orbitControls.onKeyDown, freeLookControls.onKeyDown),
       false
   );
-
   canvas.addEventListener('keyup',
       bind(orbitControls.onKeyUp, freeLookControls.onKeyUp),
       false
@@ -1163,7 +1073,6 @@
 
   var mouseDownX = 0;
   var mouseDownY = 0;
-
   function setmouseDown(event) {
     mouseDownX = event.clientX;
     mouseDownY = event.clientY;
@@ -1176,152 +1085,169 @@
 
   var loader = new THREE.FontLoader();
 
-  // ---------------------------
-  // LOCAL / SERVER CATALOG LOAD
-  // ---------------------------
-  function clearCurrentCatalogFromScene() {
-    // remove stars
-    stars.forEach(function(starMesh){
-      try { scene.remove(starMesh); } catch(e){}
+  // ========= NEW catalog loading helpers =========
+  const catalogStatusEl = document.getElementById("catalogStatus");
+  const loadCatalogBtn = document.getElementById("loadCatalogBtn");
+  const clearCatalogBtn = document.getElementById("clearCatalogBtn");
+  const catalogFileInput = document.getElementById("catalogFileInput");
+  const MAX_LOCALSTORAGE_CHARS = 3.5 * 1024 * 1024; // ~3.5MB safe limit
+
+  function resetCatalogScene() {
+    try {
+      if (tooltip) { scene.remove(tooltip.object); tooltip = null; }
+      if (lineSegment) { scene.remove(lineSegment); lineSegment = null; }
+    } catch(e){}
+
+    try { removeVirtualStars(); } catch(e){}
+
+    if (currentSystem) {
+      try { scene.remove(currentSystem.object); } catch(e){}
+      currentSystem = null;
+    }
+
+    stars.forEach(function (s) {
+      try { scene.remove(s); } catch(e){}
     });
+
     stars = [];
     starsByID = {};
     planetsByStarID = {};
     visibleStars = [];
     visibleStarsByName = {};
-    labelCache = {};
-
-    // remove current system if any
-    if (currentSystem) {
-      try { scene.remove(currentSystem.object); } catch(e){}
-      currentSystem = null;
-      currentObjectMesh = null;
-      currentObjectPrimaryId = "";
-    }
-
-    // remove tooltip/line
-    try { scene.remove(lineSegment); } catch(e){}
-    if (tooltip) {
-      try { scene.remove(tooltip.object); } catch(e){}
-      tooltip = null;
-      tooltipObject = null;
-    }
-
-    // remove any virtual stars already spawned
-    removeVirtualStars();
-    document.getElementById('virtual_stars_checkbox').checked = false;
+    currentObjectMesh = null;
+    currentObjectPrimaryId = "";
   }
 
-  function loadCatalogObject(dataParsed) {
-    starData = dataParsed.stars || [];
-    planetData = dataParsed.planets || [];
-    clearCurrentCatalogFromScene();
+  function applyCatalogObject(dataParsed) {
+    resetCatalogScene();
+
+    starData = Array.isArray(dataParsed.stars) ? dataParsed.stars : [];
+    planetData = Array.isArray(dataParsed.planets) ? dataParsed.planets : [];
+
     initializeobjectData();
     updateobjectData();
+
+    catalogStatusEl.style.color = "#8f8";
+    catalogStatusEl.textContent =
+      `Loaded catalog (${starData.length} stars, ${planetData.length} planets).`;
   }
 
-  function loadCatalogFromServer() {
-    return $.ajax({
-      type: 'GET',
-      dataType: 'html',
-      url: "star_catalog.txt"
-    }).then(function (data) {
-      return JSON.parse(data);
+  function validateCatalogObject(obj) {
+    if (!obj || typeof obj !== "object") throw new Error("Catalog is not an object.");
+    if (!Array.isArray(obj.stars)) throw new Error("Catalog missing stars[] array.");
+    if (!obj.planets) obj.planets = [];
+
+    obj.stars.forEach((s, idx) => {
+      if (typeof s.primaryId === "undefined") s.primaryId = idx + 1;
+      if (!s.type) s.type = "STAR";
+      if (!s.properName) s.properName = `Star ${s.primaryId}`;
+      if (!s.cartesianCoordsInLys) s.cartesianCoordsInLys = { x: 0, y: 0, z: 0 };
+      if (!s.radius) {
+        s.radius = { source: "INFERRED", value: { unit: "LY", quantity: 7.5e-8 } };
+      }
+      if (!s.solDistance) {
+        const d = Math.sqrt(
+          s.cartesianCoordsInLys.x**2 +
+          s.cartesianCoordsInLys.y**2 +
+          s.cartesianCoordsInLys.z**2
+        );
+        s.solDistance = { source: "INFERRED", value: { unit: "LY", quantity: d } };
+      }
+      if (!s.temperatureEstimate) {
+        s.temperatureEstimate = { source: "DEFAULT", value: { unit: "K", quantity: 5000 } };
+      }
+      if (!s.nearbyObjectIDs) s.nearbyObjectIDs = [];
+      if (!s.identifiers) s.identifiers = {};
     });
+
+    return obj;
   }
 
-  // on boot, use localStorage if present, else server
-  var catalogDeferred = $.Deferred();
-  (function bootCatalog(){
-    const local = localStorage.getItem("customStarCatalog");
-    if (local) {
+  loadCatalogBtn.addEventListener("click", function() {
+    catalogFileInput.value = "";
+    catalogFileInput.click();
+  });
+
+  clearCatalogBtn.addEventListener("click", function() {
+    localStorage.removeItem("customStarCatalog");
+    catalogStatusEl.style.color = "#cfcfcf";
+    catalogStatusEl.textContent = "Local catalog cleared. Reload page to use server catalog.";
+  });
+
+  catalogFileInput.addEventListener("change", function(ev) {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function() {
       try {
-        const parsed = JSON.parse(local);
-        if (parsed && Array.isArray(parsed.stars)) {
-          $("#localCatalogStatus").css("color","#8f8").text("Using local catalog from browser storage.");
-          catalogDeferred.resolve(parsed);
-          return;
+        const raw = reader.result;
+        const parsed = validateCatalogObject(JSON.parse(raw));
+
+        if (raw.length <= MAX_LOCALSTORAGE_CHARS) {
+          try {
+            localStorage.setItem("customStarCatalog", JSON.stringify(parsed));
+          } catch(storageErr) {
+            console.warn("Catalog too large for localStorage, loading without caching.", storageErr);
+          }
         }
+
+        applyCatalogObject(parsed);
+
       } catch(e) {
+        console.error(e);
+        catalogStatusEl.style.color = "#f88";
+        catalogStatusEl.textContent = "Invalid catalog JSON: " + e.message;
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  function loadInitialCatalogThenStart() {
+    const cached = localStorage.getItem("customStarCatalog");
+    if (cached) {
+      try {
+        const parsed = validateCatalogObject(JSON.parse(cached));
+        starData = parsed.stars;
+        planetData = parsed.planets;
+        catalogStatusEl.style.color = "#8f8";
+        catalogStatusEl.textContent =
+          `Loaded cached local catalog (${starData.length} stars).`;
+        return $.Deferred().resolve().promise();
+      } catch(e) {
+        console.warn("Cached catalog invalid, clearing.", e);
         localStorage.removeItem("customStarCatalog");
       }
     }
-    loadCatalogFromServer().then(catalogDeferred.resolve, catalogDeferred.reject);
-  })();
+
+    return $.ajax({
+      type: 'GET',
+      dataType: 'html',
+      url: "star_catalog.txt",
+      success: function (data) {
+        var dataParsed = JSON.parse(data);
+        dataParsed = validateCatalogObject(dataParsed);
+        starData = dataParsed.stars;
+        planetData = dataParsed.planets;
+      }
+    });
+  }
+  // ========= END new catalog helpers =========
 
   $.when(
-      catalogDeferred,
+      loadInitialCatalogThenStart(),
       shaders.loaders()
-  ).then(function (dataParsed) {
+  ).then(function () {
     loader.load('js/font.js', function (response) {
-      font = response;
-      loadCatalogObject(dataParsed);
-      animate();
-    });
-  }).fail(function (err) {
-    alert("Failed to load star catalog: " + err);
+          font = response;
+          initializeobjectData();
+          animate();
+          updateobjectData();
+        }
+    );
   });
 
-  // ---------------------------
-  // UI: pick local file & load
-  // ---------------------------
-  const localFileInput = document.getElementById("localCatalogFile");
-  const localLoadBtn  = document.getElementById("localCatalogLoadBtn");
-  const localClearBtn = document.getElementById("localCatalogClearBtn");
-  const localStatusEl = document.getElementById("localCatalogStatus");
-
-  localLoadBtn.addEventListener("click", function(){
-    const file = localFileInput.files && localFileInput.files[0];
-    if (!file) {
-      localStatusEl.style.color = "#f88";
-      localStatusEl.textContent = "Pick a file first.";
-      return;
-    }
-
-    const reader = new FileReader();
-reader.onload = function() {
-  try {
-    const parsed = JSON.parse(reader.result);
-
-    if (!parsed || !Array.isArray(parsed.stars)) {
-      throw new Error("Missing stars[] array in catalog.");
-    }
-    if (!parsed.planets) parsed.planets = [];
-
-    // Try to store locally, but don't fail the load if quota is exceeded
-    try {
-      localStorage.setItem("customStarCatalog", JSON.stringify(parsed));
-      localStatusEl.style.color = "#8f8";
-      localStatusEl.textContent = `Loaded + cached local catalog (${parsed.stars.length} stars).`;
-    } catch (storageErr) {
-      console.warn("Catalog too large for localStorage, loading without caching.", storageErr);
-      localStatusEl.style.color = "#ff8";
-      localStatusEl.textContent =
-        `Loaded local catalog (${parsed.stars.length} stars), but it's too large to cache in browser.`;
-    }
-
-    // Hot-load into the running skybox regardless of caching success
-    loadCatalogObject(parsed);
-
-  } catch(e) {
-    console.error(e);
-    localStatusEl.style.color = "#f88";
-    localStatusEl.textContent = "Invalid catalog JSON: " + e.message;
-  }
-};
-
-
-  localClearBtn.addEventListener("click", function(){
-    localStorage.removeItem("customStarCatalog");
-    localFileInput.value = "";
-    localStatusEl.style.color = "#ccc";
-    localStatusEl.textContent = "Cleared local catalog. Reload page to use server default.";
-  });
-
-
-  // ---------------------------
-  // AUTO EXPLORE
-  // ---------------------------
+  // Auto Explore
   let autoExploreMode = false;
   let autoExploreInterval;
 
@@ -1360,8 +1286,6 @@ reader.onload = function() {
   }
 
   document.getElementById("autoExploreButton").addEventListener("click", toggleAutoExplore);
-
 </script>
-
 </body>
 </html>
