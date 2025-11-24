@@ -112,7 +112,7 @@
         <div id="starmapListContainer">
           <div style="font-size:11px;color:#bbb;margin-bottom:6px;">Available starmaps:</div>
           <div id="starmapList">
-            <div style="color:#888;">Loading list...</div>
+            <div style="color:#888;">List will load after map starts…</div>
           </div>
         </div>
       </div>
@@ -183,7 +183,6 @@
           </td>
         </tr>
 
-        <!-- NEW: Collapse Menu button -->
         <tr class="header-row overlay-header">
           <td><b>Menu</b></td>
         </tr>
@@ -325,7 +324,7 @@
       active: 4
     });
 
-    // ===== NEW: Collapse menu behavior =====
+    // Collapse menu behavior
     let menuCollapsed = false;
 
     function collapseMenu() {
@@ -333,10 +332,8 @@
       const $headers = $acc.children("h3");
       const $panels = $headers.next();
 
-      // close any open panel
       $acc.accordion("option", "active", false);
 
-      // hide everything except first header+panel
       $headers.not(":first").hide();
       $panels.not(":first").hide();
 
@@ -352,7 +349,6 @@
       $panels.show();
 
       menuCollapsed = false;
-      // keep accordion functional
       $acc.accordion("refresh");
     }
 
@@ -361,11 +357,9 @@
       if (!menuCollapsed) collapseMenu();
     });
 
-    // clicking the first header restores all others, then works normally
     $("#selector").children("h3").first().on("click", function(){
       if (menuCollapsed) restoreMenu();
     });
-    // ===== END collapse menu behavior =====
   });
 
   var distanceHeader = $("#distance-header");
@@ -1087,6 +1081,8 @@
   const catalogFileInput = document.getElementById("catalogFileInput");
   const starmapListEl = document.getElementById("starmapList");
   const MAX_LOCALSTORAGE_CHARS = 3.5 * 1024 * 1024;
+
+  // IMPORTANT: use HTTPS to avoid mixed content blocks
   const STARMAP_INDEX_URL = "https://xtdevelopment.net/chat-proxy/starmaps/starmaps.php";
 
   function getHashCatalogURL() {
@@ -1178,7 +1174,6 @@
     return obj;
   }
 
-  // Generic URL loader used by starmap list + hash loads
   function loadCatalogFromURL(url, isCustom) {
     catalogStatusEl.style.color = "#ffb";
     catalogStatusEl.textContent = "Loading catalog from URL...";
@@ -1191,7 +1186,6 @@
         var dataParsed = validateCatalogObject(JSON.parse(data));
         applyCatalogObject(dataParsed, !!isCustom);
 
-        // Cache custom catalogs
         if (isCustom) {
           const raw = JSON.stringify(dataParsed);
           if (raw.length <= MAX_LOCALSTORAGE_CHARS) {
@@ -1212,7 +1206,6 @@
     catalogFileInput.click();
   });
 
-  // Clear button now reloads default server catalog
   clearCatalogBtn.addEventListener("click", function() {
     localStorage.removeItem("customStarCatalog");
     if (history && history.replaceState) {
@@ -1277,13 +1270,35 @@
     return loadFallbackCatalog();
   }
 
-  // Fetch starmap list for scrollbox
+  // ======= FIXED starmap list fetch: async, timeout, tolerant parsing =======
   function refreshStarmapList() {
-    fetch(STARMAP_INDEX_URL)
-      .then(r => r.json())
-      .then(urls => {
+    starmapListEl.innerHTML = `<div style="color:#888;">Loading list...</div>`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5s hard stop
+
+    fetch(STARMAP_INDEX_URL, { signal: controller.signal })
+      .then(async r => {
+        clearTimeout(timeout);
+        const text = await r.text();
+
+        // try JSON parse first
+        let urls = null;
+        try {
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed)) urls = parsed;
+          else if (parsed && Array.isArray(parsed.urls)) urls = parsed.urls;
+        } catch(e){
+          // not JSON, fall through
+        }
+
+        // fallback: line-separated list
+        if (!urls) {
+          urls = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        }
+
         starmapListEl.innerHTML = "";
-        if (!Array.isArray(urls) || urls.length === 0) {
+        if (!urls || urls.length === 0) {
           starmapListEl.innerHTML = `<div style="color:#888;">No starmaps found.</div>`;
           return;
         }
@@ -1294,18 +1309,17 @@
           item.className = "starmap-item";
           item.textContent = name;
           item.dataset.url = url;
-          item.onclick = () => {
-            // load starmap as custom
-            loadCatalogFromURL(url, true);
-          };
+          item.onclick = () => loadCatalogFromURL(url, true);
           starmapListEl.appendChild(item);
         });
       })
       .catch(err => {
+        clearTimeout(timeout);
         console.warn("Failed to load starmap list:", err);
         starmapListEl.innerHTML = `<div style="color:#f88;">Failed to load list.</div>`;
       });
   }
+  // ======= end list fetch fix =======
 
   $.when(
       loadInitialCatalogThenStart(),
@@ -1316,7 +1330,9 @@
       initializeobjectData();
       animate();
       updateobjectData();
-      refreshStarmapList();
+
+      // IMPORTANT: don't start list fetch until map is alive
+      setTimeout(refreshStarmapList, 0);
     });
   });
 
