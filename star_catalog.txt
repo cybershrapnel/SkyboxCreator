@@ -5,45 +5,44 @@
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 4.967800408698135
+          "quantity": 4.83
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93329"
+        "glieseId": "Sol",
+        "hipparcosId": "0"
       },
-      "properName": "Star 107x173x250",
+      "properName": "Sol",
       "type": "STAR",
-      "primaryId": 93329,
-      "nearbyObjectIDs": [
-        93329
-      ],
+      "primaryId": 1,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 2.529865688533919
+          "quantity": 0
         }
       },
       "parsedStellarClassification": {
         "mainClass": "G"
       },
       "cartesianCoordsInLys": {
-        "x": -31.904761904761905,
-        "y": 22.38095238095238,
-        "z": 59.047619047619044
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 5777.864578880956
+          "quantity": 5778
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 70.7491496547538
+          "quantity": 0
         }
       },
       "links": {},
@@ -51,581 +50,14 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 8.570756436400235e-8
+          "quantity": 7.35e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 0.987415961654288
-        }
-      },
-      "rawStellarClassification": "G0V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 7.324845495843823
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93330"
-      },
-      "properName": "Star 86x131x226",
-      "type": "STAR",
-      "primaryId": 93330,
-      "nearbyObjectIDs": [
-        93330
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 3.084835495767699
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "K"
-      },
-      "cartesianCoordsInLys": {
-        "x": -41.904761904761905,
-        "y": 2.380952380952381,
-        "z": 47.61904761904761
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 5055.204652602237
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 63.47638695357725
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 6.013267660048211e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.8483421571006183
-        }
-      },
-      "rawStellarClassification": "K3V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 12.27954349245682
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93331"
-      },
-      "properName": "Star 209x23x93",
-      "type": "STAR",
-      "primaryId": 93331,
-      "nearbyObjectIDs": [
-        93331
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 5.0399534227631735
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": 16.666666666666668,
-        "y": -49.047619047619044,
-        "z": -15.714285714285715
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3564.707136176388
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 54.13303508513396
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 2.413166848083598e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.29453000787967987
-        }
-      },
-      "rawStellarClassification": "M5V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": -5.582209275654637
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93332"
-      },
-      "properName": "Star 266x191x75",
-      "type": "STAR",
-      "primaryId": 93332,
-      "nearbyObjectIDs": [
-        93332
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.615089573056693
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "O"
-      },
-      "cartesianCoordsInLys": {
-        "x": 43.80952380952381,
-        "y": 30.952380952380956,
-        "z": -24.285714285714285
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 35882.61040791897
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 58.88225693199859
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 9.741894728773708e-7
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.42513675903115733
-        }
-      },
-      "rawStellarClassification": "O0V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 15.816069392599633
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93333"
-      },
-      "properName": "Star 93x205x174",
-      "type": "STAR",
-      "primaryId": 93333,
-      "nearbyObjectIDs": [
-        93333
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 2.3686938392117067
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": -38.57142857142858,
-        "y": 37.61904761904762,
-        "z": 22.857142857142854
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3289.5877424940054
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 58.52688976356787
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 3.7454238350105004e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.40121905535774005
-        }
-      },
-      "rawStellarClassification": "M3V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 13.800891205894178
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93334"
-      },
-      "properName": "Star 148x207x13",
-      "type": "STAR",
-      "primaryId": 93334,
-      "nearbyObjectIDs": [
-        93334
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 1.8813949271659247
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": -12.38095238095238,
-        "y": 38.57142857142858,
-        "z": -53.80952380952381
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 2942.4610292723014
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 67.35360373809212
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 3.0104442710873226e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.9254821336940193
-        }
-      },
-      "rawStellarClassification": "M6V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 11.558507767687196
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93335"
-      },
-      "properName": "Star 93x230x75",
-      "type": "STAR",
-      "primaryId": 93335,
-      "nearbyObjectIDs": [
-        93335
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 2.2325048315420855
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": -38.57142857142858,
-        "y": 49.52380952380952,
-        "z": -24.285714285714285
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3263.312661199938
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 67.30645385220298
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 2.753418286505084e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.3691501527476375
-        }
-      },
-      "rawStellarClassification": "M6V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 13.778572045757167
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93336"
-      },
-      "properName": "Star 222x150x105",
-      "type": "STAR",
-      "primaryId": 93336,
-      "nearbyObjectIDs": [
-        93336
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.46364760900080615
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": 22.857142857142854,
-        "y": 11.428571428571427,
-        "z": -10
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 2435.112586682764
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 27.441961017569348
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 1.1507730518934447e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.37299426771287264
-        }
-      },
-      "rawStellarClassification": "M3V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 13.182681582130739
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93337"
-      },
-      "properName": "Star 270x76x209",
-      "type": "STAR",
-      "primaryId": 93337,
-      "nearbyObjectIDs": [
-        93337
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 5.8030102775760595
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": 45.71428571428571,
-        "y": -23.809523809523807,
-        "z": 39.523809523809526
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3267.1422625038235
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 64.95245077499389
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 3.7928133790639446e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.654173705990795
-        }
-      },
-      "rawStellarClassification": "M4V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 5.563612697497911
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93338"
-      },
-      "properName": "Star 176x182x80",
-      "type": "STAR",
-      "primaryId": 93338,
-      "nearbyObjectIDs": [
-        93338
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 1.5350972141155728
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "G"
-      },
-      "cartesianCoordsInLys": {
-        "x": 0.9523809523809523,
-        "y": 26.666666666666664,
-        "z": -21.904761904761905
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 5481.9573533489765
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 34.52298849598449
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 7.577898626548217e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.6873586687238904
+          "quantity": 0
         }
       },
       "rawStellarClassification": "G2V"
@@ -635,45 +67,43 @@
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 9.151675401550063
+          "quantity": 10
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93339"
+        "glieseId": "MEQ 70667"
       },
-      "properName": "Star 98x125x1",
+      "properName": "Anchor Star 70667",
       "type": "STAR",
-      "primaryId": 93339,
-      "nearbyObjectIDs": [
-        93339
-      ],
+      "primaryId": 70667,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 3.154749789062549
+          "quantity": 1
         }
       },
       "parsedStellarClassification": {
         "mainClass": "M"
       },
       "cartesianCoordsInLys": {
-        "x": -36.19047619047619,
-        "y": -0.47619047619047616,
-        "z": -59.523809523809526
+        "x": 10,
+        "y": -8,
+        "z": 12
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 3291.346994205719
+          "quantity": 3200
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 69.66391622992349
+          "quantity": 17.549928774784245
         }
       },
       "links": {},
@@ -681,518 +111,14 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 1.2848769772530046e-8
+          "quantity": 2.9400000000000002e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": -1.0244768048695196
-        }
-      },
-      "rawStellarClassification": "M2V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 14.945084948594744
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93340"
-      },
-      "properName": "Star 18x146x180",
-      "type": "STAR",
-      "primaryId": 93340,
-      "nearbyObjectIDs": [
-        93340
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 3.0140830953745557
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": -74.28571428571429,
-        "y": 9.523809523809524,
-        "z": 25.71428571428571
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3482.2458536147283
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 79.18519296295551
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 3.386730912921962e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.3307326259345346
-        }
-      },
-      "rawStellarClassification": "M6V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 9.832313690340731
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93341"
-      },
-      "properName": "Star 97x45x46",
-      "type": "STAR",
-      "primaryId": 93341,
-      "nearbyObjectIDs": [
-        93341
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 3.9523018661300897
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": -36.66666666666667,
-        "y": -38.57142857142858,
-        "z": -38.095238095238095
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3650.7535334422755
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 65.44804589915685
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 1.2774328165829228e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.621270077916519
-        }
-      },
-      "rawStellarClassification": "M8V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 3.40776333396252
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93342"
-      },
-      "properName": "Star 77x141x243",
-      "type": "STAR",
-      "primaryId": 93342,
-      "nearbyObjectIDs": [
-        93342
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 2.988168732010948
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "F"
-      },
-      "cartesianCoordsInLys": {
-        "x": -46.19047619047619,
-        "y": 7.142857142857142,
-        "z": 55.714285714285715
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 7494.999848793315
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 72.72318840314466
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 8.824424123904409e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.8727735493294235
-        }
-      },
-      "rawStellarClassification": "F2V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 12.672603026302438
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93343"
-      },
-      "properName": "Star 231x5x2",
-      "type": "STAR",
-      "primaryId": 93343,
-      "nearbyObjectIDs": [
-        93343
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 5.15262949393947
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": 27.142857142857142,
-        "y": -57.61904761904762,
-        "z": -59.047619047619044
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3238.58144481843
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 86.8522346148697
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 3.0784318291331836e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.7475757745467251
-        }
-      },
-      "rawStellarClassification": "M8V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 6.063877725604898
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93344"
-      },
-      "properName": "Star 67x156x91",
-      "type": "STAR",
-      "primaryId": 93344,
-      "nearbyObjectIDs": [
-        93344
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 2.868237330066357
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "K"
-      },
-      "cartesianCoordsInLys": {
-        "x": -50.95238095238095,
-        "y": 14.285714285714285,
-        "z": -16.666666666666668
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3954.348371764496
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 55.479766898819896
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 4.952989573993527e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.3051222888579972
-        }
-      },
-      "rawStellarClassification": "K7V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 5.711043165949777
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93345"
-      },
-      "properName": "Star 61x121x182",
-      "type": "STAR",
-      "primaryId": 93345,
-      "nearbyObjectIDs": [
-        93345
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 3.1858115979854458
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "G"
-      },
-      "cartesianCoordsInLys": {
-        "x": -53.80952380952381,
-        "y": -2.380952380952381,
-        "z": 26.666666666666664
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 5302.23476182415
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 60.101954194178944
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 8.357273407944472e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.45971253992159566
-        }
-      },
-      "rawStellarClassification": "G5V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 15.148841033116963
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93346"
-      },
-      "properName": "Star 93x248x140",
-      "type": "STAR",
-      "primaryId": 93346,
-      "nearbyObjectIDs": [
-        93346
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 2.1569049932130433
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": -38.57142857142858,
-        "y": 58.095238095238095,
-        "z": 6.666666666666666
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3321.16343223469
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 70.05181108171055
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 1.5815951169056922e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.09531189847460257
-        }
-      },
-      "rawStellarClassification": "M9V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 12.509716010584482
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93347"
-      },
-      "properName": "Star 327x250x134",
-      "type": "STAR",
-      "primaryId": 93347,
-      "nearbyObjectIDs": [
-        93347
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.6810850284037535
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": 72.85714285714285,
-        "y": 59.047619047619044,
-        "z": 3.8095238095238093
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3628.068026852594
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 93.85785556976141
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 1.3998494552142224e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.04059937799975221
+          "quantity": 0.5
         }
       },
       "rawStellarClassification": "M3V"
@@ -1202,45 +128,43 @@
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 7.797961744364601
+          "quantity": 7.023979838614711
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93348"
+        "glieseId": "MEQ 10000"
       },
-      "properName": "Star 236x23x107",
+      "properName": "Star 27x150x100",
       "type": "STAR",
-      "primaryId": 93348,
-      "nearbyObjectIDs": [
-        93348
-      ],
+      "primaryId": 10000,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 5.254235013211148
+          "quantity": 2.674724443807749
         }
       },
       "parsedStellarClassification": {
         "mainClass": "K"
       },
       "cartesianCoordsInLys": {
-        "x": 29.523809523809522,
-        "y": -49.047619047619044,
-        "z": -9.047619047619047
+        "x": -85.02857142857142,
+        "y": 42.85714285714286,
+        "z": 8.571428571428571
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 4466.006318960247
+          "quantity": 4459.972803142853
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 57.95846507171655
+          "quantity": 95.6036716910827
         }
       },
       "links": {},
@@ -1248,62 +172,60 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 5.437258793835543e-8
+          "quantity": 6.486557005125303e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": -0.15674629421620814
+          "quantity": 0.0897763993604118
         }
       },
-      "rawStellarClassification": "K4V"
+      "rawStellarClassification": "K1V"
     },
     {
       "absoluteMagnitude": {
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 10.78273395242785
+          "quantity": 12.89520469519125
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93349"
+        "glieseId": "MEQ 10001"
       },
-      "properName": "Star 119x152x249",
+      "properName": "Star 248x126x97",
       "type": "STAR",
-      "primaryId": 93349,
-      "nearbyObjectIDs": [
-        93349
-      ],
+      "primaryId": 10001,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 2.700000291282503
+          "quantity": 0.3778373443043037
         }
       },
       "parsedStellarClassification": {
         "mainClass": "M"
       },
       "cartesianCoordsInLys": {
-        "x": -26.19047619047619,
-        "y": 12.38095238095238,
-        "z": 58.57142857142857
+        "x": 66.5142857142857,
+        "y": 26.4,
+        "z": 6.514285714285714
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 3580.8389351736455
+          "quantity": 2656.2591270475796
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 65.34402244919782
+          "quantity": 71.85781879829764
         }
       },
       "links": {},
@@ -1311,62 +233,60 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 3.805594495762176e-8
+          "quantity": 3.7318910584755855e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 1.111477750177891
+          "quantity": 0.09077984530174589
         }
       },
-      "rawStellarClassification": "M0V"
+      "rawStellarClassification": "M1IV"
     },
     {
       "absoluteMagnitude": {
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 5.929956421860698
+          "quantity": 0.29300881615741203
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93350"
+        "glieseId": "MEQ 10002"
       },
-      "properName": "Star 36x206x176",
+      "properName": "Star 136x128x113",
       "type": "STAR",
-      "primaryId": 93350,
-      "nearbyObjectIDs": [
-        93350
-      ],
+      "primaryId": 10002,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 2.616225779774478
+          "quantity": 1.925501978805837
         }
       },
       "parsedStellarClassification": {
-        "mainClass": "G"
+        "mainClass": "A"
       },
       "cartesianCoordsInLys": {
-        "x": -65.71428571428572,
-        "y": 38.095238095238095,
-        "z": 23.809523809523807
+        "x": -10.285714285714286,
+        "y": 27.771428571428572,
+        "z": 17.485714285714284
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 5274.378583336515
+          "quantity": 7568.965225646336
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 79.60218550082615
+          "quantity": 34.39183576587529
         }
       },
       "links": {},
@@ -1374,188 +294,60 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 6.756173974544528e-8
+          "quantity": 1.3016122336298666e-7
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 0.3037560533377054
+          "quantity": 0.5333562838384408
         }
       },
-      "rawStellarClassification": "G6V"
+      "rawStellarClassification": "A4V"
     },
     {
       "absoluteMagnitude": {
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 4.570560858551636
+          "quantity": 10.67067463122289
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93351"
+        "glieseId": "MEQ 10003"
       },
-      "properName": "Star 241x203x178",
+      "properName": "Star 88x88x54",
       "type": "STAR",
-      "primaryId": 93351,
-      "nearbyObjectIDs": [
-        93351
-      ],
+      "primaryId": 10003,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 0.8547312970856566
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "G"
-      },
-      "cartesianCoordsInLys": {
-        "x": 31.904761904761905,
-        "y": 36.66666666666667,
-        "z": 24.76190476190476
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 5329.743122722235
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 54.54823740581938
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 8.410668534100518e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.47118793875389137
-        }
-      },
-      "rawStellarClassification": "G7V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 2.408299809800943
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93352"
-      },
-      "properName": "Star 71x96x179",
-      "type": "STAR",
-      "primaryId": 93352,
-      "nearbyObjectIDs": [
-        93352
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 3.425013906737845
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "F"
-      },
-      "cartesianCoordsInLys": {
-        "x": -49.047619047619044,
-        "y": -14.285714285714285,
-        "z": 25.238095238095237
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 6085.13814975936
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 56.979926449062646
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 1.1328403801801409e-7
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.45886364420460796
-        }
-      },
-      "rawStellarClassification": "F9III"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 9.283551597555006
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93353"
-      },
-      "properName": "Star 147x116x137",
-      "type": "STAR",
-      "primaryId": 93353,
-      "nearbyObjectIDs": [
-        93353
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 3.4962983056007335
+          "quantity": 3.1336563122823264
         }
       },
       "parsedStellarClassification": {
         "mainClass": "M"
       },
       "cartesianCoordsInLys": {
-        "x": -12.857142857142856,
-        "y": -4.761904761904762,
-        "z": 5.238095238095238
+        "x": -43.199999999999996,
+        "y": 0.34285714285714286,
+        "z": -22.97142857142857
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 2716.663650012363
+          "quantity": 2458.0563560519645
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 14.677176197545181
+          "quantity": 48.92896975854543
         }
       },
       "links": {},
@@ -1563,62 +355,60 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 1.942350432669454e-8
+          "quantity": 2.9770064750007714e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 0.36493344864847116
+          "quantity": -0.48870766855773873
         }
       },
-      "rawStellarClassification": "M5V"
+      "rawStellarClassification": "M1V"
     },
     {
       "absoluteMagnitude": {
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 15.34848033424337
+          "quantity": 11.357608130997837
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93354"
+        "glieseId": "MEQ 10004"
       },
-      "properName": "Star 52x185x56",
+      "properName": "Star 189x71x175",
       "type": "STAR",
-      "primaryId": 93354,
-      "nearbyObjectIDs": [
-        93354
-      ],
+      "primaryId": 10004,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 2.6911455979151366
+          "quantity": 5.873539198554749
         }
       },
       "parsedStellarClassification": {
         "mainClass": "M"
       },
       "cartesianCoordsInLys": {
-        "x": -58.095238095238095,
-        "y": 28.095238095238095,
-        "z": -33.333333333333336
+        "x": 26.057142857142857,
+        "y": -11.314285714285715,
+        "z": 60
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 2410.9569979879793
+          "quantity": 2916.229030729993
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 72.63270753649235
+          "quantity": 66.38514709708822
         }
       },
       "links": {},
@@ -1626,140 +416,14 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 2.264451078597563e-8
+          "quantity": 3.900141131557091e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": -0.4767905845312834
-        }
-      },
-      "rawStellarClassification": "M0V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 7.40838016900912
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93355"
-      },
-      "properName": "Star 56x133x46",
-      "type": "STAR",
-      "primaryId": 93355,
-      "nearbyObjectIDs": [
-        93355
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 3.082340059926361
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "K"
-      },
-      "cartesianCoordsInLys": {
-        "x": -56.19047619047619,
-        "y": 3.333333333333333,
-        "z": -38.095238095238095
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 4875.109833024615
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 67.96858017611125
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 6.227294410147232e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.5949689791148456
-        }
-      },
-      "rawStellarClassification": "K0V"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 15.894808038967106
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93356"
-      },
-      "properName": "Star 159x226x54",
-      "type": "STAR",
-      "primaryId": 93356,
-      "nearbyObjectIDs": [
-        93356
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 1.7196862744043937
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "M"
-      },
-      "cartesianCoordsInLys": {
-        "x": -7.142857142857142,
-        "y": 47.61904761904761,
-        "z": -34.285714285714285
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3497.915380560148
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 59.110949141339475
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 4.238818879953341e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": -0.6187570129882969
+          "quantity": 1.128606196246984
         }
       },
       "rawStellarClassification": "M4V"
@@ -1769,45 +433,43 @@
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 7.538033029282818
+          "quantity": 6.731356562469526
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93357"
+        "glieseId": "MEQ 10005"
       },
-      "properName": "Star 187x38x54",
+      "properName": "Star 240x7x132",
       "type": "STAR",
-      "primaryId": 93357,
-      "nearbyObjectIDs": [
-        93357
-      ],
+      "primaryId": 10005,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 4.859055474181883
+          "quantity": 5.547892663234077
         }
       },
       "parsedStellarClassification": {
         "mainClass": "K"
       },
       "cartesianCoordsInLys": {
-        "x": 6.19047619047619,
-        "y": -41.904761904761905,
-        "z": -34.285714285714285
+        "x": 61.028571428571425,
+        "y": -55.2,
+        "z": 30.514285714285712
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 3797.5762283448307
+          "quantity": 4334.659384077801
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 54.49625005301988
+          "quantity": 87.76473188738917
         }
       },
       "links": {},
@@ -1815,14 +477,14 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 5.764812747264686e-8
+          "quantity": 5.458069849103094e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": -0.6804449770033851
+          "quantity": 0.35509855905871124
         }
       },
       "rawStellarClassification": "K7V"
@@ -1832,108 +494,43 @@
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 8.117615867355616
+          "quantity": 14.848540702930185
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93358"
+        "glieseId": "MEQ 10006"
       },
-      "properName": "Star 240x97x174",
+      "properName": "Star 243x24x159",
       "type": "STAR",
-      "primaryId": 93358,
-      "nearbyObjectIDs": [
-        93358
-      ],
+      "primaryId": 10006,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 5.869186304567386
-        }
-      },
-      "parsedStellarClassification": {
-        "mainClass": "K"
-      },
-      "cartesianCoordsInLys": {
-        "x": 31.42857142857143,
-        "y": -13.809523809523808,
-        "z": 22.857142857142854
-      },
-      "temperatureEstimate": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "K",
-          "quantity": 3894.333199558655
-        }
-      },
-      "solDistance": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "LY",
-          "quantity": 41.24205413747548
-        }
-      },
-      "links": {},
-      "radius": {
-        "source": "INFERRED",
-        "value": {
-          "unit": "LY",
-          "quantity": 5.988372421596534e-8
-        }
-      },
-      "declinationRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 0.5874247635433324
-        }
-      },
-      "rawStellarClassification": "K1IV"
-    },
-    {
-      "absoluteMagnitude": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "MV",
-          "quantity": 13.413538331539957
-        }
-      },
-      "identifiers": {
-        "glieseId": "MEQ 93359"
-      },
-      "properName": "Star 170x151x221",
-      "type": "STAR",
-      "primaryId": 93359,
-      "nearbyObjectIDs": [
-        93359
-      ],
-      "rightAscensionRadians": {
-        "source": "SUPPLIED",
-        "value": {
-          "unit": "RADIAN",
-          "quantity": 1.7294515889812985
+          "quantity": 5.679055069788382
         }
       },
       "parsedStellarClassification": {
         "mainClass": "M"
       },
       "cartesianCoordsInLys": {
-        "x": -1.9047619047619047,
-        "y": 11.904761904761903,
-        "z": 45.23809523809524
+        "x": 63.08571428571428,
+        "y": -43.542857142857144,
+        "z": 49.02857142857143
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 3000.5060124078327
+          "quantity": 2428.772991436326
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 46.81705602335412
+          "quantity": 90.99224456748262
         }
       },
       "links": {},
@@ -1941,62 +538,60 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 2.9712105248839022e-8
+          "quantity": 1.3437300412599835e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 1.3103448471893535
+          "quantity": 0.5690374546517596
         }
       },
-      "rawStellarClassification": "M2V"
+      "rawStellarClassification": "M3V"
     },
     {
       "absoluteMagnitude": {
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 14.531759280741134
+          "quantity": 13.35867421955468
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93360"
+        "glieseId": "MEQ 10007"
       },
-      "properName": "Star 194x235x64",
+      "properName": "Star 274x26x17",
       "type": "STAR",
-      "primaryId": 93360,
-      "nearbyObjectIDs": [
-        93360
-      ],
+      "primaryId": 10007,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 1.3893286234004023
+          "quantity": 5.81953769817878
         }
       },
       "parsedStellarClassification": {
         "mainClass": "M"
       },
       "cartesianCoordsInLys": {
-        "x": 9.523809523809524,
-        "y": 51.904761904761905,
-        "z": -29.523809523809522
+        "x": 84.34285714285714,
+        "y": -42.17142857142857,
+        "z": -48.34285714285714
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 3238.7004254169733
+          "quantity": 3335.9306623621856
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 60.46869094857283
+          "quantity": 105.96781952795953
         }
       },
       "links": {},
@@ -2004,62 +599,60 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 4.298933016201535e-8
+          "quantity": 2.843593893996041e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": -0.5100828168893817
+          "quantity": -0.47372383233617815
         }
       },
-      "rawStellarClassification": "M4V"
+      "rawStellarClassification": "M7V"
     },
     {
       "absoluteMagnitude": {
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 4.17498248738387
+          "quantity": 14.707598587840922
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93361"
+        "glieseId": "MEQ 10008"
       },
-      "properName": "Star 185x131x40",
+      "properName": "Star 119x1x22",
       "type": "STAR",
-      "primaryId": 93361,
-      "nearbyObjectIDs": [
-        93361
-      ],
+      "primaryId": 10008,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 0.4266274931268761
+          "quantity": 4.358059905271784
         }
       },
       "parsedStellarClassification": {
-        "mainClass": "G"
+        "mainClass": "M"
       },
       "cartesianCoordsInLys": {
-        "x": 5.238095238095238,
-        "y": 2.380952380952381,
-        "z": -40.952380952380956
+        "x": -21.942857142857143,
+        "y": -59.31428571428571,
+        "z": -44.91428571428571
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 5959.242284829623
+          "quantity": 2650.2407351781044
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 41.354613788943226
+          "quantity": 77.56910809473217
         }
       },
       "links": {},
@@ -2067,62 +660,121 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 7.405110030242137e-8
+          "quantity": 2.6701539758665744e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": -1.4312095064012755
+          "quantity": -0.6175296754771107
         }
       },
-      "rawStellarClassification": "G2V"
+      "rawStellarClassification": "M1V"
     },
     {
       "absoluteMagnitude": {
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 3.3913391330180382
+          "quantity": 14.57311546122322
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93362"
+        "glieseId": "MEQ 10009"
       },
-      "properName": "Star 173x129x10",
+      "properName": "Star 245x55x56",
       "type": "STAR",
-      "primaryId": 93362,
-      "nearbyObjectIDs": [
-        93362
-      ],
+      "primaryId": 10009,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 1.8925468811915387
+          "quantity": 5.9503064363458185
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": 64.45714285714286,
+        "y": -22.285714285714285,
+        "z": -21.599999999999998
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 2991.5631794072888
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 71.53975346987583
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 1.249971765908683e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.30671652195192617
+        }
+      },
+      "rawStellarClassification": "M1V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 3.3672143010146542
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10010"
+      },
+      "properName": "Star 126x113x58",
+      "type": "STAR",
+      "primaryId": 10010,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 2.3462938236043556
         }
       },
       "parsedStellarClassification": {
         "mainClass": "F"
       },
       "cartesianCoordsInLys": {
-        "x": -0.47619047619047616,
-        "y": 1.4285714285714284,
-        "z": -55.238095238095234
+        "x": -17.142857142857142,
+        "y": 17.485714285714284,
+        "z": -20.228571428571428
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 7298.617694897067
+          "quantity": 6598.055321594903
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 55.25861687763298
+          "quantity": 31.761971871136353
         }
       },
       "links": {},
@@ -2130,14 +782,14 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 1.0494514465263305e-7
+          "quantity": 1.0846575397862246e-7
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": -1.5435420625983243
+          "quantity": -0.6904448571966939
         }
       },
       "rawStellarClassification": "F9V"
@@ -2147,45 +799,43 @@
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 3.1383773451396646
+          "quantity": 11.568489171222767
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93363"
+        "glieseId": "MEQ 10011"
       },
-      "properName": "Star 197x64x118",
+      "properName": "Star 11x36x26",
       "type": "STAR",
-      "primaryId": 93363,
-      "nearbyObjectIDs": [
-        93363
-      ],
+      "primaryId": 10011,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 5.067619842431371
+          "quantity": 3.4940864349354284
         }
       },
       "parsedStellarClassification": {
-        "mainClass": "F"
+        "mainClass": "M"
       },
       "cartesianCoordsInLys": {
-        "x": 10.952380952380953,
-        "y": -29.523809523809522,
-        "z": -3.8095238095238093
+        "x": -96,
+        "y": -35.31428571428571,
+        "z": -42.17142857142857
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 6586.526313023452
+          "quantity": 3443.7538204367333
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 31.71943330167788
+          "quantity": 110.64143962939612
         }
       },
       "links": {},
@@ -2193,62 +843,60 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 9.52069644349847e-8
+          "quantity": 3.8956468948103736e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": -0.1203912418755846
+          "quantity": -0.39104421508860293
         }
       },
-      "rawStellarClassification": "F5V"
+      "rawStellarClassification": "M6V"
     },
     {
       "absoluteMagnitude": {
         "source": "SUPPLIED",
         "value": {
           "unit": "MV",
-          "quantity": 3.2302728380323
+          "quantity": 7.868083845380932
         }
       },
       "identifiers": {
-        "glieseId": "MEQ 93364"
+        "glieseId": "MEQ 10012"
       },
-      "properName": "Star 187x220x233",
+      "properName": "Star 207x125x160",
       "type": "STAR",
-      "primaryId": 93364,
-      "nearbyObjectIDs": [
-        93364
-      ],
+      "primaryId": 10012,
+      "nearbyObjectIDs": [],
       "rightAscensionRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 1.4333701812979536
+          "quantity": 0.5900602138124773
         }
       },
       "parsedStellarClassification": {
-        "mainClass": "F"
+        "mainClass": "K"
       },
       "cartesianCoordsInLys": {
-        "x": 6.19047619047619,
-        "y": 44.76190476190476,
-        "z": 50.95238095238095
+        "x": 38.4,
+        "y": 25.71428571428571,
+        "z": 49.714285714285715
       },
       "temperatureEstimate": {
         "source": "SUPPLIED",
         "value": {
           "unit": "K",
-          "quantity": 6441.31766946
+          "quantity": 5060.69710978392
         }
       },
       "solDistance": {
         "source": "SUPPLIED",
         "value": {
           "unit": "LY",
-          "quantity": 68.10356259473683
+          "quantity": 67.87705572487327
         }
       },
       "links": {},
@@ -2256,17 +904,994 @@
         "source": "INFERRED",
         "value": {
           "unit": "LY",
-          "quantity": 1.0824618439940208e-7
+          "quantity": 5.383289684072002e-8
         }
       },
       "declinationRadians": {
         "source": "SUPPLIED",
         "value": {
           "unit": "RADIAN",
-          "quantity": 0.8452850633302089
+          "quantity": 0.8218646317044247
         }
       },
-      "rawStellarClassification": "F9III"
+      "rawStellarClassification": "K5V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 14.13512671343587
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10013"
+      },
+      "properName": "Star 11x137x46",
+      "type": "STAR",
+      "primaryId": 10013,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 2.8017397104682047
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": -96,
+        "y": 33.94285714285714,
+        "z": -28.45714285714286
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 2587.6418794211113
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 105.72571366802045
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 3.146123942989859e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.2725208332730903
+        }
+      },
+      "rawStellarClassification": "M9V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 8.199119433921743
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10014"
+      },
+      "properName": "Star 4x132x23",
+      "type": "STAR",
+      "primaryId": 10014,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 2.847641321099431
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "K"
+      },
+      "cartesianCoordsInLys": {
+        "x": -100.8,
+        "y": 30.514285714285712,
+        "z": -44.22857142857143
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 4738.948117623376
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 114.22752804497392
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 5.881984062699541e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.39758964962153354
+        }
+      },
+      "rawStellarClassification": "K1V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": -4.1558447864195145
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10015"
+      },
+      "properName": "Star 4x127x7",
+      "type": "STAR",
+      "primaryId": 10015,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 2.8790859052787034
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "O"
+      },
+      "cartesianCoordsInLys": {
+        "x": -100.8,
+        "y": 27.085714285714285,
+        "z": -55.2
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 40491.66890826782
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 118.07334973806472
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 8.325583368164587e-7
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.4864673724564421
+        }
+      },
+      "rawStellarClassification": "O3III"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 15.338153889843149
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10016"
+      },
+      "properName": "Star 165x27x91",
+      "type": "STAR",
+      "primaryId": 10016,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 4.9397913286670585
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": 9.6,
+        "y": -41.48571428571428,
+        "z": 2.4
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 3600.048413725305
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 42.64955439152815
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 3.7632480294036274e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 0.056302310385441916
+        }
+      },
+      "rawStellarClassification": "M5V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 11.782519461079179
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10017"
+      },
+      "properName": "Star 232x172x16",
+      "type": "STAR",
+      "primaryId": 10017,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 0.8065430477516955
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": 55.542857142857144,
+        "y": 57.94285714285714,
+        "z": -49.02857142857143
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 2582.4886524583053
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 94.0541572169775
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 2.010491505908875e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.5483504263170895
+        }
+      },
+      "rawStellarClassification": "M5V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 6.987619539088514
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10018"
+      },
+      "properName": "Star 260x68x53",
+      "type": "STAR",
+      "primaryId": 10018,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 6.1061589404042325
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "K"
+      },
+      "cartesianCoordsInLys": {
+        "x": 74.74285714285715,
+        "y": -13.371428571428572,
+        "z": -23.65714285714286
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 4944.741101062096
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 79.52955553806166
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 6.370688383236802e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.3020348255690575
+        }
+      },
+      "rawStellarClassification": "K5III"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 11.336738601385974
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10019"
+      },
+      "properName": "Star 244x16x48",
+      "type": "STAR",
+      "primaryId": 10019,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 5.627749556192075
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": 63.77142857142858,
+        "y": -49.02857142857143,
+        "z": -27.085714285714285
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 3420.4159324195466
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 84.87774641644708
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 4.200525925959572e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.3247949224822318
+        }
+      },
+      "rawStellarClassification": "M9V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 4.035059455725557
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10020"
+      },
+      "properName": "Star 132x121x118",
+      "type": "STAR",
+      "primaryId": 10020,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 2.086721840260182
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "G"
+      },
+      "cartesianCoordsInLys": {
+        "x": -13.028571428571428,
+        "y": 22.97142857142857,
+        "z": 20.914285714285715
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 5591.630852343144
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 33.68735001481132
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 7.673318884331634e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 0.6698073765816903
+        }
+      },
+      "rawStellarClassification": "G6V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 1.8798051242530984
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10021"
+      },
+      "properName": "Star 120x55x58",
+      "type": "STAR",
+      "primaryId": 10021,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 3.950608471992192
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "A"
+      },
+      "cartesianCoordsInLys": {
+        "x": -21.257142857142856,
+        "y": -22.285714285714285,
+        "z": -20.228571428571428
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 8246.04970169972
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 36.84717473177945
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 1.7661504355911313e-7
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.5811502128282671
+        }
+      },
+      "rawStellarClassification": "A6V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 15.550593194028874
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10022"
+      },
+      "properName": "Star 173x10x137",
+      "type": "STAR",
+      "primaryId": 10022,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 4.988983611204022
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": 15.085714285714287,
+        "y": -53.14285714285714,
+        "z": 33.94285714285714
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 3288.9576507409715
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 64.83717754372667
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 2.6177859493390633e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 0.5509644138516084
+        }
+      },
+      "rawStellarClassification": "M2V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 9.745293247813272
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10023"
+      },
+      "properName": "Star 224x33x72",
+      "type": "STAR",
+      "primaryId": 10023,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 5.641879584540915
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": 50.05714285714286,
+        "y": -37.371428571428574,
+        "z": -10.628571428571428
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 2533.389009796352
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 63.36645607182116
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 4.376341661601135e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.16852844751908436
+        }
+      },
+      "rawStellarClassification": "M1V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 4.009533114703938
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10024"
+      },
+      "properName": "Star 252x53x68",
+      "type": "STAR",
+      "primaryId": 10024,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 5.954027480851779
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "G"
+      },
+      "cartesianCoordsInLys": {
+        "x": 69.25714285714287,
+        "y": -23.65714285714286,
+        "z": -13.371428571428572
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 5468.223310060208
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 74.39762998200129
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 7.881846541132865e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.18071118970139766
+        }
+      },
+      "rawStellarClassification": "G5V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 14.522562872981133
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10025"
+      },
+      "properName": "Star 57x32x103",
+      "type": "STAR",
+      "primaryId": 10025,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 3.674942358060328
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": -64.45714285714286,
+        "y": -38.05714285714286,
+        "z": 10.628571428571428
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 3220.223047779593
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 75.60447022741015
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 3.460662502913692e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 0.14104847714287974
+        }
+      },
+      "rawStellarClassification": "M1V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 14.718805347901258
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10026"
+      },
+      "properName": "Star 185x93x56",
+      "type": "STAR",
+      "primaryId": 10026,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 0.16037544397595038
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": 23.314285714285713,
+        "y": 3.771428571428572,
+        "z": -21.599999999999998
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 2876.0178442362007
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 32.00530568260104
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 4.267646829702297e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.7408130517021827
+        }
+      },
+      "rawStellarClassification": "M0V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 9.800815774711793
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10027"
+      },
+      "properName": "Star 83x175x24",
+      "type": "STAR",
+      "primaryId": 10027,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 2.2314437695087417
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "M"
+      },
+      "cartesianCoordsInLys": {
+        "x": -46.628571428571426,
+        "y": 60,
+        "z": -43.542857142857144
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 2451.4461422543172
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 87.57970131047863
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 3.5787115247093025e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": -0.5203453226788931
+        }
+      },
+      "rawStellarClassification": "M1V"
+    },
+    {
+      "absoluteMagnitude": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "MV",
+          "quantity": 3.7560202874195103
+        }
+      },
+      "identifiers": {
+        "glieseId": "MEQ 10028"
+      },
+      "properName": "Star 22x140x169",
+      "type": "STAR",
+      "primaryId": 10028,
+      "nearbyObjectIDs": [],
+      "rightAscensionRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 2.7550863484758743
+        }
+      },
+      "parsedStellarClassification": {
+        "mainClass": "F"
+      },
+      "cartesianCoordsInLys": {
+        "x": -88.45714285714286,
+        "y": 36,
+        "z": 55.885714285714286
+      },
+      "temperatureEstimate": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "K",
+          "quantity": 6472.273822142085
+        }
+      },
+      "solDistance": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "LY",
+          "quantity": 110.65206362139601
+        }
+      },
+      "links": {},
+      "radius": {
+        "source": "INFERRED",
+        "value": {
+          "unit": "LY",
+          "quantity": 9.639269946736004e-8
+        }
+      },
+      "declinationRadians": {
+        "source": "SUPPLIED",
+        "value": {
+          "unit": "RADIAN",
+          "quantity": 0.5294492101809023
+        }
+      },
+      "rawStellarClassification": "F8IV"
     }
-  ]
+  ],
+  "planets": []
 }
