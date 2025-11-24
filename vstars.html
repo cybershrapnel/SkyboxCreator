@@ -471,8 +471,11 @@
   function createVirtualStars() {
     const baseNumStars = (100*renderRadius)-900;
     const ampMult = getVirtualStarAmpMultiplier();
-    const numStars = Math.max(0, Math.floor(baseNumStars * ampMult));
+    let numStars = Math.max(0, Math.floor(baseNumStars * ampMult));
     const maxDistance = renderRadius * 12;
+
+      // ✅ guarantee at least 1 even if amp is 0 or negative
+  if (numStars < 1) numStars = 1;
 
     for (let i = 0; i < numStars; i++) {
       const randomX = Math.random() * maxDistance - maxDistance / 2;
