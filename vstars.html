@@ -261,6 +261,7 @@
           <div class="stat-row"><span class="stat-label">Planets loaded (file)</span><span class="stat-value" id="statPlanetsLoaded">0</span></div>
           <div class="stat-row"><span class="stat-label">Stars visible (range)</span><span class="stat-value" id="statStarsVisible">0</span></div>
           <div class="stat-row"><span class="stat-label">Planets visible (range)</span><span class="stat-value" id="statPlanetsVisible">0</span></div>
+          <div class="stat-row"><span class="stat-label">Virtual stars loaded</span><span class="stat-value" id="statVirtualStarsLoaded">0</span></div>
         </div>
       </div>
     </div>
@@ -1332,28 +1333,33 @@
   const statPlanetsLoadedEl = document.getElementById("statPlanetsLoaded");
   const statStarsVisibleEl  = document.getElementById("statStarsVisible");
   const statPlanetsVisibleEl= document.getElementById("statPlanetsVisible");
+  const statVirtualStarsLoadedEl = document.getElementById("statVirtualStarsLoaded");
 
-  function updateCatalogStats() {
-    const starsLoaded = (starData && starData.length) ? starData.length : 0;
-    const planetsLoaded = (planetData && planetData.length) ? planetData.length : 0;
+function updateCatalogStats() {
+  const starsLoaded = (starData && starData.length) ? starData.length : 0;
+  const planetsLoaded = (planetData && planetData.length) ? planetData.length : 0;
 
-    const starsVisible = (visibleStars && visibleStars.length) ? visibleStars.length : 0;
+  const virtualStarsLoaded = (virtualStars && virtualStars.length) ? virtualStars.length : 0;
 
-    let planetsVisible = 0;
-    if (visibleStars && visibleStars.length) {
-      visibleStars.forEach(function(s){
-        if (!s || !s.objectData) return;
-        const sid = s.objectData.primaryId;
-        const plist = planetsByStarID[sid];
-        if (plist && plist.length) planetsVisible += plist.length;
-      });
-    }
+  const starsVisible = (visibleStars && visibleStars.length) ? visibleStars.length : 0;
 
-    if (statStarsLoadedEl) statStarsLoadedEl.textContent = String(starsLoaded);
-    if (statPlanetsLoadedEl) statPlanetsLoadedEl.textContent = String(planetsLoaded);
-    if (statStarsVisibleEl) statStarsVisibleEl.textContent = String(starsVisible);
-    if (statPlanetsVisibleEl) statPlanetsVisibleEl.textContent = String(planetsVisible);
+  let planetsVisible = 0;
+  if (visibleStars && visibleStars.length) {
+    visibleStars.forEach(function(s){
+      if (!s || !s.objectData) return;
+      const sid = s.objectData.primaryId;
+      const plist = planetsByStarID[sid];
+      if (plist && plist.length) planetsVisible += plist.length;
+    });
   }
+
+  if (statStarsLoadedEl) statStarsLoadedEl.textContent = String(starsLoaded);
+  if (statVirtualStarsLoadedEl) statVirtualStarsLoadedEl.textContent = String(virtualStarsLoaded);
+  if (statPlanetsLoadedEl) statPlanetsLoadedEl.textContent = String(planetsLoaded);
+  if (statStarsVisibleEl) statStarsVisibleEl.textContent = String(starsVisible);
+  if (statPlanetsVisibleEl) statPlanetsVisibleEl.textContent = String(planetsVisible);
+}
+
 
   function select(mesh, opts) {
     if (!mesh) return;
