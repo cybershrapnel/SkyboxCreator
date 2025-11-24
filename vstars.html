@@ -223,11 +223,6 @@
     .stat-row:last-child { border-bottom:none; }
     .stat-label { color:#bbb; }
     .stat-value { color:#fff; white-space:nowrap; }
-
-    /* ✅ small helper styling for virtual star amplifier */
-    .vs-amp-wrap { margin-top: 6px; font-size: 12px; }
-    .vs-amp-label { display:flex; justify-content:space-between; align-items:center; gap:6px; }
-    .vs-amp-sub { font-size:10px; color:#9aa; margin-top:2px; }
   </style>
 </head>
 
@@ -341,12 +336,11 @@
           <td>
             <input type="checkbox" id="virtual_stars_checkbox" name="virtual_stars"> Enable Virtual Stars
 
-            <!-- ✅ Amplifier slider (acts +/- on your base formula) -->
-            <div class="vs-amp-wrap">
-              <div class="vs-amp-label">
-                <label for="virtualStarAmpSlider">Virtual stars amplifier</label>
-                <span id="virtualStarAmpValue">0%</span>
-              </div>
+            <!-- ✅ Virtual Stars amplifier slider (pos/neg multiplier on existing formula) -->
+            <div style="margin-top:6px;">
+              <label for="virtualStarAmpSlider" style="font-size:12px;">
+                Virtual stars amplifier: <span id="virtualStarAmpValue">0%</span>
+              </label>
               <input
                 type="range"
                 id="virtualStarAmpSlider"
@@ -356,13 +350,19 @@
                 value="0"
                 style="width:100%;"
               />
-              <div class="vs-amp-sub">
+              <div style="font-size:10px;color:#9aa;margin-top:2px;">
                 0% = default density. Negative reduces, positive increases.
               </div>
             </div>
 
             <div>
               <button id="autoExploreButton">Toggle Auto Explore</button>
+            </div>
+            <!-- ✅ Drift jump feature button (only enabled when virtual stars are on) -->
+            <div style="margin-top:6px;">
+              <button id="virtualDriftButton" class="catalog-btn" disabled>
+                Jump to Virtual Star Drift
+              </button>
             </div>
           </td>
         </tr>
@@ -422,7 +422,6 @@
   <a href="https://mequavis.com" target="_top">MEQUAVIS.COM</a><br />
 </div>
 
-
   <canvas id='webgl_canvas'></canvas>
 </div>
 
@@ -448,7 +447,8 @@
   let virtualStars = [];
 
   // ✅ amplifier slider elements + helpers
-  const virtualStarsCheckbox = document.getElementById("virtual_stars_checkbox");
+  const virtualStarsCheckbox = document.getElementById('virtual_stars_checkbox');
+  const virtualDriftButton = document.getElementById('virtualDriftButton');
   const virtualStarAmpSlider = document.getElementById("virtualStarAmpSlider");
   const virtualStarAmpValue  = document.getElementById("virtualStarAmpValue");
 
@@ -456,7 +456,6 @@
     if (!virtualStarAmpSlider) return 1.0;
     const pct = parseFloat(virtualStarAmpSlider.value);
     if (isNaN(pct)) return 1.0;
-    // multiplier = 1 + pct/100, clamp at >= 0
     return Math.max(0, 1 + pct / 100);
   }
 
@@ -469,14 +468,10 @@
   updateVirtualStarAmpDisplay();
 
   function createVirtualStars() {
-    const rr = parseFloat(renderRadius) || 0;
-    const baseNumStars = (100 * rr) - 900;
-
-    // ✅ amplifier applied to base formula
+    const baseNumStars = (100*renderRadius)-900;
     const ampMult = getVirtualStarAmpMultiplier();
     const numStars = Math.max(0, Math.floor(baseNumStars * ampMult));
-
-    const maxDistance = rr * 12;
+    const maxDistance = renderRadius * 12;
 
     for (let i = 0; i < numStars; i++) {
       const randomX = Math.random() * maxDistance - maxDistance / 2;
@@ -530,7 +525,7 @@
         properName: `Virtual Star ${i + 1}`,
         type: "VIRTUAL_STAR",
         radius: { value: { quantity: 0.01 } },
-        solDistance: { value: { quantity: Math.random() * rr } },
+        solDistance: { value: { quantity: Math.random() * renderRadius } },
         nearbyObjectIDs: [],
         cartesianCoordsInLys: { x: randomX, y: randomY, z: randomZ }
       };
@@ -544,6 +539,7 @@
     updateobjectData();
     updateCatalogStats();
     updateNearestStarsList(currentObjectMesh);
+    updateVirtualDriftButtonState();
   }
 
   function removeVirtualStars() {
@@ -558,12 +554,19 @@
     updateobjectData();
     updateCatalogStats();
     updateNearestStarsList(currentObjectMesh);
+    updateVirtualDriftButtonState();
+  }
+
+  function updateVirtualDriftButtonState() {
+    if (!virtualDriftButton) return;
+    virtualDriftButton.disabled = !(virtualStarsCheckbox && virtualStarsCheckbox.checked);
   }
 
   if (virtualStarsCheckbox) {
     virtualStarsCheckbox.addEventListener('change', function() {
       if (this.checked) createVirtualStars();
       else removeVirtualStars();
+      updateVirtualDriftButtonState();
     });
   }
 
@@ -577,6 +580,25 @@
       }
     });
   }
+
+  if (virtualDriftButton) {
+    virtualDriftButton.addEventListener('click', function() {
+      if (!virtualStarsCheckbox || !virtualStarsCheckbox.checked) return;
+      if (!virtualStars || !virtualStars.length) return;
+
+      // nearest virtual star to camera = best "drift jump" feel
+      let best = virtualStars[0];
+      let bestD = Infinity;
+      for (const v of virtualStars) {
+        const d = camera.position.distanceTo(v.position);
+        if (d < bestD) { bestD = d; best = v; }
+      }
+
+      select(best, { driftMode: true });
+    });
+  }
+
+  updateVirtualDriftButtonState();
 </script>
 
 <script>
@@ -699,6 +721,9 @@
   var visibleStarsByName = {};
   var renderRadius = 75;
 
+  // track last selected raw coords for stable offsets when no System is active (virtual stars)
+  var lastSelectedStarRaw = { x:0, y:0, z:0 };
+
   $("#jump_to_list").keydown(function (e) {
     if (e.keyCode == 13) {
       e.preventDefault();
@@ -799,7 +824,9 @@
           currentObjectMesh.objectData.radius.value.quantity * 10,
           approachTime,
           function () {
-            if (isStar(currentObjectMesh)) currentSystem.populatePlanets();
+            if (currentSystem && isStar(currentObjectMesh) && currentObjectMesh.objectData.type === "STAR") {
+              currentSystem.populatePlanets();
+            }
             if (isStar(prevStarMesh)) {
               (prevStarMesh.objectData.nearbyObjectIDs || []).forEach(function (e) {
                 resetStarScale(starsByID[e]);
@@ -821,6 +848,25 @@
     } else {
       finalZoom(2)();
     }
+  }
+
+  // ✅ Drift jump feature (intentional “bug orbit”)
+  function updateTargetDrift(prevStarMesh) {
+    var prevControlMode = controlMode;
+    controlMode = 'tween';
+
+    const targetPos = absolutePosition(currentObjectMesh);
+    const orbitR = Math.max(10, renderRadius * 0.6);
+
+    tweenControls.setZoom(
+      targetPos,
+      orbitR,
+      1.5,
+      function () {
+        controlMode = 'orbit';
+        orbitControls.orbit(targetPos, orbitR);
+      }
+    );
   }
 
   function isStar(mesh) { return mesh && (mesh.objectData.type == "STAR" || mesh.objectData.type == "VIRTUAL_STAR"); }
@@ -880,8 +926,21 @@
     return objectData.solDistance.value.quantity < renderRadius;
   }
 
+  // ✅ Highlight safe for virtual star children (no child[0] assumptions)
+  function createHighlightSprite() {
+    const sp = new THREE.Sprite(SPRITE_MATERIAL);
+    sp.userData.isHighlight = true;
+    sp.name = "highlightSprite";
+    return sp;
+  }
+
+  function findHighlightChild(starMesh) {
+    if (!starMesh || !starMesh.children) return null;
+    return starMesh.children.find(c => c && c.userData && c.userData.isHighlight);
+  }
+
   function updateHighlight(starMesh) {
-    const highlight = starMesh.children[0];
+    const highlight = findHighlightChild(starMesh);
 
     if (highlightMode === 'none' ||
         (currentSystem && starMesh.objectData.primaryId === currentSystem.star.objectData.primaryId)) {
@@ -891,7 +950,7 @@
           planetsByStarID[starMesh.objectData.primaryId][0]) {
         if (!highlight) starMesh.add(createHighlightSprite());
       } else {
-        starMesh.remove(highlight);
+        if (highlight) starMesh.remove(highlight);
       }
     } else if (highlightMode === 'all' || starMesh.objectData.type === "VIRTUAL_STAR") {
       if (!highlight) starMesh.add(createHighlightSprite());
@@ -1083,10 +1142,6 @@
     updateCatalogStats();
   }
 
-  function createHighlightSprite() {
-    return new THREE.Sprite(SPRITE_MATERIAL);
-  }
-
   function setOffset(raw, current, offset) {
     if (!raw || !offset || !current) return;
     current.x = raw.x - offset.x;
@@ -1097,7 +1152,13 @@
   function currentOffset(position) {
     var pos = new THREE.Vector3();
     pos.add(position);
-    if (currentSystem) pos.add(currentSystem.star.objectData.cartesianCoordsInLys);
+
+    if (currentSystem && currentSystem.star && currentSystem.star.objectData.cartesianCoordsInLys) {
+      pos.add(currentSystem.star.objectData.cartesianCoordsInLys);
+    } else if (lastSelectedStarRaw) {
+      pos.add(lastSelectedStarRaw);
+    }
+
     return pos;
   }
 
@@ -1183,6 +1244,8 @@
 
   /* ===========================================================
      ✅ Nearest stars listing (100 closest)
+     - Sort by where we are
+     - Filter by Sol-range visibility
      =========================================================== */
   const nearestListEl = document.getElementById("nearestList");
   const NEAREST_MAX_ITEMS = 100;
@@ -1216,6 +1279,9 @@
       if (!s || !s.position || !s.objectData) continue;
       if (String(s.objectData.primaryId) === String(baseStar.objectData.primaryId)) continue;
       if (s.objectData.type !== "STAR" && s.objectData.type !== "VIRTUAL_STAR") continue;
+
+      // ✅ FILTER: only include stars visible in Sol-range
+      if (!isRender(s.objectData)) continue;
 
       const d = basePos.distanceTo(s.position); // ly units
       items.push({ mesh: s, dist: d });
@@ -1289,13 +1355,17 @@
     if (statPlanetsVisibleEl) statPlanetsVisibleEl.textContent = String(planetsVisible);
   }
 
-  function select(mesh) {
+  function select(mesh, opts) {
     if (!mesh) return;
+    opts = opts || {};
+    const driftMode = !!opts.driftMode;
 
     var newTarget = mesh.objectData;
 
-    if (isStar(mesh)) {
+    if (isStar(mesh) && !driftMode) {
       var offset = mesh.objectData.cartesianCoordsInLys || { x:0, y:0, z:0 };
+      lastSelectedStarRaw = offset;
+
       stars.forEach(function (e) {
         if (e.objectData.cartesianCoordsInLys) setOffset(e.objectData.cartesianCoordsInLys, e.position, offset);
       });
@@ -1346,14 +1416,14 @@
 
         var prevTargetMesh = currentObjectMesh;
         updateCurrentTargets(mesh);
-        updateTarget(prevTargetMesh);
+
+        if (driftMode) updateTargetDrift(prevTargetMesh);
+        else updateTarget(prevTargetMesh);
+
         doReassign(currentObjectMesh);
 
-        // ✅ update LOS + nearest lists to match new target
         updateLineOfSightList(currentObjectMesh);
         updateNearestStarsList(currentObjectMesh);
-
-        // ✅ stats may need refresh (safe)
         updateCatalogStats();
       }
     }
@@ -1368,11 +1438,16 @@
     return mesh.objectData.primaryId == 1;
   }
 
+  // ✅ REAL stars only get System. Virtual stars stay simple to prevent drift bug.
   function updateCurrentTargets(mesh) {
     currentObjectMesh = mesh;
     currentObjectPrimaryId = mesh.objectData.primaryId;
 
-    if (mesh.objectData.type == "STAR" || mesh.objectData.type == "VIRTUAL_STAR") {
+    if (isStar(mesh) && mesh.objectData.cartesianCoordsInLys) {
+      lastSelectedStarRaw = mesh.objectData.cartesianCoordsInLys;
+    }
+
+    if (mesh.objectData.type === "STAR") {
       if (currentSystem && currentSystem.star.objectData.primaryId == mesh.objectData.primaryId) return;
 
       var prevSystem = currentSystem;
@@ -1393,6 +1468,18 @@
 
       updateHighlight(currentSystem.star);
       scene.add(currentSystem.object);
+      return;
+    }
+
+    if (mesh.objectData.type === "VIRTUAL_STAR") {
+      if (currentSystem) {
+        try {
+          updateHighlight(currentSystem.star);
+          scene.remove(currentSystem.object);
+        } catch(e){}
+        currentSystem = null;
+      }
+      updateHighlight(mesh);
     }
   }
 
@@ -1474,7 +1561,9 @@
           var nearStar = starsByID[e];
           if (!nearStar) return;
           var distance = camera.position.distanceTo(nearStar.position) * .3;
-          var childUniform = nearStar.material.uniforms;
+          var childUniform = nearStar.material && nearStar.material.uniforms;
+          if (!childUniform || !childUniform.scale) return;
+
           if (childUniform.scale.value != distance) {
             var scale = Math.min(distance, nearStar.objectData.radius.value.quantity * 3000000);
             setStarScale(nearStar, scale);
@@ -1492,13 +1581,24 @@
     renderer.render(scene, camera);
   }
 
+  // ✅ Scale safe for shader + non-shader stars
   function setStarScale(star, scale) {
-    star.material.uniforms.scale.value = scale;
+    if (star.material && star.material.uniforms && star.material.uniforms.scale) {
+      star.material.uniforms.scale.value = scale;
+    }
     star.scale.x = star.scale.y = star.scale.z = scale;
   }
 
   function resetStarScale(star) {
-    star.material.uniforms.scale.value = star.objectData.radius.value.quantity * 3000000;
+    const rQ = (star.objectData &&
+               star.objectData.radius &&
+               star.objectData.radius.value &&
+               star.objectData.radius.value.quantity) || 7.5e-8;
+
+    if (star.material && star.material.uniforms && star.material.uniforms.scale) {
+      star.material.uniforms.scale.value = rQ * 3000000;
+    }
+
     var scale = 7.35355e-8 * 8000000;
     star.scale.set(scale, scale, scale);
   }
@@ -1560,7 +1660,7 @@
 
   function renameSolIfCustom(catalogObj) {
     if (!catalogObj || !Array.isArray(catalogObj.stars)) return catalogObj;
-    const rand = Math.floor(Math.random() * 900000) + 100000;
+    const rand = Math.floor(Math.floor(Math.random() * 900000) + 100000);
     catalogObj.stars.forEach(function(s){
       if (String(s.primaryId) === "1") {
         s.properName = "Virtual Sol Outpost " + rand;
