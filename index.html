@@ -1163,6 +1163,47 @@
     return obj;
   }
 
+  // Try to load JSON from clipboard on page load.
+  async function tryLoadFromClipboard() {
+    if (!navigator.clipboard || !navigator.clipboard.readText) return false;
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || text.trim().length < 2) return false;
+
+      let parsed = null;
+      try {
+        parsed = JSON.parse(text);
+      } catch (e) {
+        return false;
+      }
+
+      // If clipboard is just an array, treat it as stars[]
+      if (Array.isArray(parsed)) {
+        parsed = { stars: parsed, planets: [] };
+      }
+
+      parsed = validateCatalogObject(parsed);
+
+      // Cache if small enough.
+      if (text.length <= MAX_LOCALSTORAGE_CHARS) {
+        try {
+          localStorage.setItem("customStarCatalog", JSON.stringify(parsed));
+        } catch (storageErr) {
+          console.warn("Clipboard catalog too large for localStorage; loading without caching.", storageErr);
+        }
+      }
+
+      applyCatalogObject(parsed);
+      catalogStatusEl.style.color = "#8f8";
+      catalogStatusEl.textContent = `Loaded catalog from clipboard (${parsed.stars.length} stars).`;
+
+      return true;
+    } catch (err) {
+      console.warn("Clipboard read blocked or failed; falling back to cached/server catalog.", err);
+      return false;
+    }
+  }
+
   loadCatalogBtn.addEventListener("click", function() {
     catalogFileInput.value = "";
     catalogFileInput.click();
@@ -1182,7 +1223,10 @@
     reader.onload = function() {
       try {
         const raw = reader.result;
-        const parsed = validateCatalogObject(JSON.parse(raw));
+        let parsed = JSON.parse(raw);
+
+        if (Array.isArray(parsed)) parsed = { stars: parsed, planets: [] };
+        parsed = validateCatalogObject(parsed);
 
         if (raw.length <= MAX_LOCALSTORAGE_CHARS) {
           try {
@@ -1204,33 +1248,58 @@
   });
 
   function loadInitialCatalogThenStart() {
-    const cached = localStorage.getItem("customStarCatalog");
-    if (cached) {
-      try {
-        const parsed = validateCatalogObject(JSON.parse(cached));
-        starData = parsed.stars;
-        planetData = parsed.planets;
-        catalogStatusEl.style.color = "#8f8";
-        catalogStatusEl.textContent =
-          `Loaded cached local catalog (${starData.length} stars).`;
-        return $.Deferred().resolve().promise();
-      } catch(e) {
-        console.warn("Cached catalog invalid, clearing.", e);
-        localStorage.removeItem("customStarCatalog");
+    const dfd = $.Deferred();
+
+    // After clipboard attempt, try cache then server
+    function loadCacheOrServer() {
+      const cached = localStorage.getItem("customStarCatalog");
+      if (cached) {
+        try {
+          let parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) parsed = { stars: parsed, planets: [] };
+          parsed = validateCatalogObject(parsed);
+          starData = parsed.stars;
+          planetData = parsed.planets;
+          catalogStatusEl.style.color = "#8f8";
+          catalogStatusEl.textContent =
+            `Loaded cached local catalog (${starData.length} stars).`;
+          dfd.resolve();
+          return;
+        } catch(e) {
+          console.warn("Cached catalog invalid, clearing.", e);
+          localStorage.removeItem("customStarCatalog");
+        }
       }
+
+      $.ajax({
+        type: 'GET',
+        dataType: 'html',
+        url: "star_catalog.txt",
+        success: function (data) {
+          try {
+            var dataParsed = JSON.parse(data);
+            if (Array.isArray(dataParsed)) dataParsed = { stars: dataParsed, planets: [] };
+            dataParsed = validateCatalogObject(dataParsed);
+            starData = dataParsed.stars;
+            planetData = dataParsed.planets;
+            dfd.resolve();
+          } catch(e) {
+            dfd.reject(e);
+          }
+        },
+        error: function (xhr, status, err) {
+          dfd.reject(err || status);
+        }
+      });
     }
 
-    return $.ajax({
-      type: 'GET',
-      dataType: 'html',
-      url: "star_catalog.txt",
-      success: function (data) {
-        var dataParsed = JSON.parse(data);
-        dataParsed = validateCatalogObject(dataParsed);
-        starData = dataParsed.stars;
-        planetData = dataParsed.planets;
-      }
+    // Clipboard first
+    tryLoadFromClipboard().then(function(loaded) {
+      if (loaded) dfd.resolve();
+      else loadCacheOrServer();
     });
+
+    return dfd.promise();
   }
   // ========= END new catalog helpers =========
 
@@ -1240,11 +1309,15 @@
   ).then(function () {
     loader.load('js/font.js', function (response) {
           font = response;
-          initializeobjectData();
+          if (!stars.length) initializeobjectData();
           animate();
           updateobjectData();
         }
     );
+  }).fail(function(e){
+    console.error("Catalog load failed:", e);
+    catalogStatusEl.style.color = "#f88";
+    catalogStatusEl.textContent = "Catalog load failed: " + (e && e.message ? e.message : e);
   });
 
   // Auto Explore
