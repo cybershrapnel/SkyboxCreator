@@ -1093,24 +1093,23 @@
   const MAX_LOCALSTORAGE_CHARS = 3.5 * 1024 * 1024; // ~3.5MB safe limit
 
   // NEW: detect hash URL (index.html#https://example.com/star_catalog.txt)
-function getHashCatalogURL() {
-  console.log("[hash] raw location.hash =", window.location.hash);
+  function getHashCatalogURL() {
+    console.log("[hash] raw location.hash =", window.location.hash);
 
-  if (!window.location.hash) return null;
-  const raw = window.location.hash.substring(1).trim();
-  if (!raw) return null;
+    if (!window.location.hash) return null;
+    const raw = window.location.hash.substring(1).trim();
+    if (!raw) return null;
 
-  const decoded = decodeURIComponent(raw);
-  console.log("[hash] decoded =", decoded);
+    const decoded = decodeURIComponent(raw);
+    console.log("[hash] decoded =", decoded);
 
-  if (/^https?:\/\//i.test(decoded)) {
-    console.log("[hash] valid URL detected");
-    return decoded;
+    if (/^https?:\/\//i.test(decoded)) {
+      console.log("[hash] valid URL detected");
+      return decoded;
+    }
+    console.log("[hash] NOT a valid http(s) URL");
+    return null;
   }
-  console.log("[hash] NOT a valid http(s) URL");
-  return null;
-}
-
 
   // NEW: rename Sol on custom loads
   function renameSolIfCustom(catalogObj) {
@@ -1206,10 +1205,48 @@ function getHashCatalogURL() {
     catalogFileInput.click();
   });
 
+  // ✅ FIXED CLEAR BUTTON: reloads default server catalog live
   clearCatalogBtn.addEventListener("click", function() {
+    // kill local custom cache
     localStorage.removeItem("customStarCatalog");
-    catalogStatusEl.style.color = "#cfcfcf";
-    catalogStatusEl.textContent = "Local catalog cleared. Reload to use server catalog.";
+
+    // kill hash custom URL so it doesn't override again
+    if (window.location.hash) {
+      history.replaceState(null, document.title,
+        window.location.pathname + window.location.search
+      );
+    }
+
+    catalogStatusEl.style.color = "#ffb";
+    catalogStatusEl.textContent = "Reloading server catalog...";
+
+    $.ajax({
+      type: "GET",
+      dataType: "html",
+      url: "star_catalog.txt",
+      cache: false,
+      success: function(data) {
+        try {
+          var dataParsed = JSON.parse(data);
+          dataParsed = validateCatalogObject(dataParsed);
+
+          // apply as non-custom so Sol stays Sol
+          applyCatalogObject(dataParsed, false);
+
+          catalogStatusEl.style.color = "#cfcfcf";
+          catalogStatusEl.textContent = "Using server catalog.";
+        } catch(e) {
+          console.error(e);
+          catalogStatusEl.style.color = "#f88";
+          catalogStatusEl.textContent = "Server catalog invalid: " + e.message;
+        }
+      },
+      error: function(xhr, status, err) {
+        console.error("[catalog] server reload ERROR", { status, err, xhr });
+        catalogStatusEl.style.color = "#f88";
+        catalogStatusEl.textContent = "Failed to reload server catalog.";
+      }
+    });
   });
 
   // MOD: local file load counts as custom => rename Sol
@@ -1243,47 +1280,46 @@ function getHashCatalogURL() {
   });
 
   // MOD: hash URL takes top priority over cache/default
-function loadInitialCatalogThenStart() {
-  const hashURL = getHashCatalogURL();
-  console.log("[catalog] hashURL =", hashURL);
+  function loadInitialCatalogThenStart() {
+    const hashURL = getHashCatalogURL();
+    console.log("[catalog] hashURL =", hashURL);
 
-  if (hashURL) {
-    console.log("[catalog] attempting to fetch hash catalog:", hashURL);
-    catalogStatusEl.style.color = "#ffb";
-    catalogStatusEl.textContent = "Loading catalog from URL hash...";
+    if (hashURL) {
+      console.log("[catalog] attempting to fetch hash catalog:", hashURL);
+      catalogStatusEl.style.color = "#ffb";
+      catalogStatusEl.textContent = "Loading catalog from URL hash...";
 
-    return $.ajax({
-      type: 'GET',
-      dataType: 'text',
-      url: hashURL,
-      success: function (data) {
-        console.log("[catalog] hash fetch SUCCESS, bytes =", data.length);
-        var dataParsed = validateCatalogObject(JSON.parse(data));
-        dataParsed = renameSolIfCustom(dataParsed);
-        starData = dataParsed.stars;
-        planetData = dataParsed.planets;
-        console.log("[catalog] parsed stars =", starData.length, "planets =", planetData.length);
-        catalogStatusEl.style.color = "#8f8";
-        catalogStatusEl.textContent =
-          `Loaded hash catalog (${starData.length} stars, ${planetData.length} planets). (custom)`;
-      },
-      error: function (xhr, status, err) {
-        console.log("[catalog] hash fetch ERROR", { status, err, xhr });
-        console.warn("Hash catalog load failed, falling back to cache/default.", err);
-        catalogStatusEl.style.color = "#f88";
-        catalogStatusEl.textContent =
-          "Hash catalog failed to load. Falling back to local/default...";
-      }
-    }).then(null, function () {
-      console.log("[catalog] running fallback after hash failure");
-      return loadFallbackCatalog();
-    });
+      return $.ajax({
+        type: 'GET',
+        dataType: 'text',
+        url: hashURL,
+        success: function (data) {
+          console.log("[catalog] hash fetch SUCCESS, bytes =", data.length);
+          var dataParsed = validateCatalogObject(JSON.parse(data));
+          dataParsed = renameSolIfCustom(dataParsed);
+          starData = dataParsed.stars;
+          planetData = dataParsed.planets;
+          console.log("[catalog] parsed stars =", starData.length, "planets =", planetData.length);
+          catalogStatusEl.style.color = "#8f8";
+          catalogStatusEl.textContent =
+            `Loaded hash catalog (${starData.length} stars, ${planetData.length} planets). (custom)`;
+        },
+        error: function (xhr, status, err) {
+          console.log("[catalog] hash fetch ERROR", { status, err, xhr });
+          console.warn("Hash catalog load failed, falling back to cache/default.", err);
+          catalogStatusEl.style.color = "#f88";
+          catalogStatusEl.textContent =
+            "Hash catalog failed to load. Falling back to local/default...";
+        }
+      }).then(null, function () {
+        console.log("[catalog] running fallback after hash failure");
+        return loadFallbackCatalog();
+      });
+    }
+
+    console.log("[catalog] no hash URL, using fallback");
+    return loadFallbackCatalog();
   }
-
-  console.log("[catalog] no hash URL, using fallback");
-  return loadFallbackCatalog();
-}
-
 
   // NEW: previous cache/default logic moved here
   function loadFallbackCatalog() {
