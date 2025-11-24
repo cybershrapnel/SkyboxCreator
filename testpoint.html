@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MEQUAVIS Skybox (Adaptive Picking Test)</title>
+  <style>
+    :root{
+      --meq-accent: #8aff2a; /* your picker drives this; fallback here */
+      --meq-bg: #020205;
+      --meq-panel: rgba(0,0,0,0.75);
+      --meq-text: #e8ffe0;
+    }
+    html, body {
+      margin: 0; padding: 0; overflow: hidden; background: var(--meq-bg);
+      font-family: monospace; color: var(--meq-text);
+    }
+    #app {
+      position: fixed; inset: 0; display: grid; grid-template-columns: 1fr 320px;
+    }
+    #view {
+      position: relative; width: 100%; height: 100%;
+    }
+    #hud {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    #hint {
+      position: absolute; left: 12px; top: 12px; font-size: 12px;
+      background: var(--meq-panel); padding: 6px 8px; border: 1px solid var(--meq-accent);
+      border-radius: 8px; pointer-events:none;
+    }
+    #info {
+      height: 100%; background: rgba(0,0,0,0.9); border-left: 2px solid var(--meq-accent);
+      display: flex; flex-direction: column; gap: 8px; padding: 10px; overflow:auto;
+    }
+    #info h2 { margin: 0 0 4px 0; color: var(--meq-accent); font-size: 14px; }
+    .kv { font-size: 12px; margin-bottom: 6px; }
+    .kv b { color: var(--meq-accent); }
+    #losList {
+      display: grid; grid-auto-rows: min-content; gap: 6px; font-size: 12px;
+    }
+    .losItem {
+      padding: 6px; border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px; cursor: pointer; background: rgba(255,255,255,0.03);
+    }
+    .losItem:hover { border-color: var(--meq-accent); }
+    #footerLink {
+      margin-top: auto; font-size: 11px; opacity: 0.8;
+      border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px;
+    }
+    #footerLink a { color: var(--meq-accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="view">
+      <canvas id="c"></canvas>
+      <div id="hud">
+        <div id="hint">Drag to orbit • Scroll to zoom • Click stars<br>Picking auto-expands when you "hover & wiggle"</div>
+      </div>
+    </div>
+    <aside id="info">
+      <h2>Target</h2>
+      <div id="targetMeta" class="kv">No target yet.</div>
+
+      <h2>Line of sight (click to select)</h2>
+      <div class="kv">Anything within a small cone behind/in front of the highlighted star is listed here.</div>
+      <div id="losList"></div>
+
+      <div id="footerLink">
+        <a href="https://mequavis.com" target="_self">MEQUAVIS.COM</a>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Three.js + OrbitControls -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+  (() => {
+    const canvas = document.getElementById("c");
+    const view = document.getElementById("view");
+    const infoMeta = document.getElementById("targetMeta");
+    const losList  = document.getElementById("losList");
+
+    const W = () => view.clientWidth;
+    const H = () => view.clientHeight;
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, preserveDrawingBuffer:false });
+    renderer.setPixelRatio(devicePixelRatio);
+    renderer.setSize(W(), H(), false);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
+    const camera = new THREE.PerspectiveCamera(60, W()/H(), 0.1, 2000);
+    camera.position.set(0, 0, 220);
+
+    const controls = new THREE.OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.rotateSpeed = 0.5;
+    controls.zoomSpeed = 0.7;
+    controls.panSpeed = 0.5;
+
+    // ---------- Starfield ----------
+    const STAR_COUNT = 6000;  // keep modest for test
+    const stars = [];         // {id, name, pos:Vector3, mag, color, sizePx}
+    const positions = new Float32Array(STAR_COUNT * 3);
+    const colors    = new Float32Array(STAR_COUNT * 3);
+    const sizes     = new Float32Array(STAR_COUNT);
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+    const palette = [
+      new THREE.Color("#ffffff"),
+      new THREE.Color("#d9e7ff"),
+      new THREE.Color("#ffe8cf"),
+      new THREE.Color("#c6ffd9")
+    ];
+
+    for (let i=0;i<STAR_COUNT;i++){
+      const r = Math.cbrt(Math.random()) * 500;
+      const theta = rand(0, Math.PI*2);
+      const phi = Math.acos(rand(-1,1));
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.sin(phi) * Math.sin(theta);
+      const z = r * Math.cos(phi);
+
+      const mag = rand(0.2, 2.2); // fake "brightness"
+      const col = pick(palette);
+
+      stars.push({
+        id: i,
+        name: `Star ${i}`,
+        pos: new THREE.Vector3(x,y,z),
+        mag,
+        color: col,
+        sizePx: 1.0 + (2.2 - mag) * 1.6 // base point size in pixels
+      });
+
+      positions[i*3+0] = x;
+      positions[i*3+1] = y;
+      positions[i*3+2] = z;
+
+      colors[i*3+0] = col.r;
+      colors[i*3+1] = col.g;
+      colors[i*3+2] = col.b;
+
+      sizes[i] = stars[i].sizePx;
+    }
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geom.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geom.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+
+    // custom shader so size stays screen-ish
+    const mat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      vertexColors: true,
+      uniforms: {
+        uPixelRatio: { value: devicePixelRatio },
+        uSizeBoost:  { value: 1.0 }
+      },
+      vertexShader: `
+        attribute float size;
+        uniform float uPixelRatio;
+        uniform float uSizeBoost;
+        varying vec3 vColor;
+        void main(){
+          vColor = color;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mv;
+          float dist = -mv.z;
+          float s = size * uSizeBoost * uPixelRatio;
+          gl_PointSize = s * (300.0 / dist); // attenuate a bit
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vColor;
+        void main(){
+          float r = length(gl_PointCoord - vec2(0.5));
+          float a = smoothstep(0.5, 0.0, r);
+          gl_FragColor = vec4(vColor, a);
+        }
+      `
+    });
+
+    const points = new THREE.Points(geom, mat);
+    scene.add(points);
+
+    // ---------- Adaptive Picking ----------
+    const mouse = new THREE.Vector2(999,999);
+    let lastMouse = {x:999, y:999, t: performance.now()};
+    let idleMs = 0;
+    let wigglePx = 0;
+    let hoverId = null;
+    let selectedId = null;
+
+    const BASE_PICK_PX = 10;     // baseline screen-space radius
+    const IDLE_GAIN_MS = 1.0/70; // px per ms while idle
+    const WIGGLE_GAIN  = 0.9;    // px per wiggle "unit"
+    const MAX_PICK_PX  = 42;
+
+    function onPointerMove(e){
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      mouse.x = (x / rect.width) * 2 - 1;
+      mouse.y = -(y / rect.height) * 2 + 1;
+
+      const now = performance.now();
+      const dx = x - lastMouse.x;
+      const dy = y - lastMouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const dt = Math.max(1, now - lastMouse.t);
+
+      if (dist < 3) {
+        idleMs += dt;
+        wigglePx += dist;
+      } else {
+        idleMs = 0;
+        wigglePx = 0;
+      }
+      lastMouse = {x,y,t:now};
+    }
+
+    canvas.addEventListener("pointermove", onPointerMove, {passive:true});
+
+    function currentPickRadiusPx(){
+      const idleBoost = idleMs * IDLE_GAIN_MS; // grows if sitting still
+      const wiggleBoost = (wigglePx/6) * WIGGLE_GAIN;
+      return Math.min(MAX_PICK_PX, BASE_PICK_PX + idleBoost + wiggleBoost);
+    }
+
+    const tmpV = new THREE.Vector3();
+    const tmpScreen = new THREE.Vector2();
+
+    function findNearestStar(){
+      // Convert mouse NDC to screen px
+      const rect = canvas.getBoundingClientRect();
+      const mx = (mouse.x * 0.5 + 0.5) * rect.width;
+      const my = (-mouse.y * 0.5 + 0.5) * rect.height;
+
+      const pickR = currentPickRadiusPx();
+      let best = null;
+      let bestD = Infinity;
+
+      for (let i=0;i<stars.length;i++){
+        tmpV.copy(stars[i].pos).project(camera);
+        if (tmpV.z < -1 || tmpV.z > 1) continue; // behind near/far planes
+
+        const sx = (tmpV.x * 0.5 + 0.5) * rect.width;
+        const sy = (-tmpV.y * 0.5 + 0.5) * rect.height;
+
+        const dx = sx - mx;
+        const dy = sy - my;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+
+        if (d < bestD){
+          bestD = d;
+          best = i;
+        }
+      }
+
+      if (best !== null && bestD <= pickR) return best;
+      return null;
+    }
+
+    // ---------- Highlight + line ----------
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x4aa3ff, transparent:true, opacity:0.9 });
+    const lineGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    const hoverLine = new THREE.Line(lineGeom, lineMat);
+    scene.add(hoverLine);
+    hoverLine.visible = false;
+
+    const hoverSpriteCanvas = document.createElement("canvas");
+    hoverSpriteCanvas.width = 256;
+    hoverSpriteCanvas.height = 64;
+    const hsCtx = hoverSpriteCanvas.getContext("2d");
+    const hoverTex = new THREE.CanvasTexture(hoverSpriteCanvas);
+    const hoverSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: hoverTex, transparent:true }));
+    scene.add(hoverSprite);
+    hoverSprite.visible = false;
+
+    function setHover(id){
+      hoverId = id;
+      if (id == null){
+        hoverLine.visible = false;
+        hoverSprite.visible = false;
+        return;
+      }
+      const p = stars[id].pos;
+      const camDir = new THREE.Vector3().subVectors(p, camera.position).normalize();
+      const lineEnd = new THREE.Vector3().copy(p);
+      const lineStart = new THREE.Vector3().copy(camera.position).add(camDir.multiplyScalar(8));
+
+      hoverLine.geometry.setFromPoints([lineStart, lineEnd]);
+      hoverLine.visible = true;
+
+      // small label near star
+      hsCtx.clearRect(0,0,256,64);
+      hsCtx.fillStyle = "rgba(0,0,0,0.6)";
+      hsCtx.fillRect(0,0,256,64);
+      hsCtx.strokeStyle = "#4aa3ff";
+      hsCtx.lineWidth = 2;
+      hsCtx.strokeRect(1,1,254,62);
+      hsCtx.fillStyle = "#eaffff";
+      hsCtx.font = "12px monospace";
+      hsCtx.fillText(stars[id].name, 8, 22);
+      hsCtx.fillText(`pickR=${currentPickRadiusPx().toFixed(0)}px`, 8, 42);
+      hoverTex.needsUpdate = true;
+
+      hoverSprite.position.copy(p).add(new THREE.Vector3(0,4,0));
+      hoverSprite.scale.set(24,6,1);
+      hoverSprite.visible = true;
+    }
+
+    // ---------- LOS Listing ----------
+    function computeLineOfSight(fromStarId, coneDeg = 1.2, maxItems = 40){
+      if (fromStarId == null) return [];
+      const origin = camera.position;
+      const target = stars[fromStarId].pos;
+      const axis = new THREE.Vector3().subVectors(target, origin).normalize();
+      const cosThresh = Math.cos(THREE.MathUtils.degToRad(coneDeg));
+
+      const items = [];
+      for (let i=0;i<stars.length;i++){
+        if (i === fromStarId) continue;
+        const v = new THREE.Vector3().subVectors(stars[i].pos, origin).normalize();
+        const c = v.dot(axis);
+        if (c >= cosThresh){
+          const dist = origin.distanceTo(stars[i].pos);
+          const tdist = origin.distanceTo(target);
+          items.push({
+            id: i,
+            name: stars[i].name,
+            dist,
+            behind: dist > tdist
+          });
+        }
+      }
+      items.sort((a,b)=>a.dist-b.dist);
+      return items.slice(0, maxItems);
+    }
+
+    function renderLOS(fromStarId){
+      losList.innerHTML = "";
+      const los = computeLineOfSight(fromStarId);
+      if (!los.length){
+        losList.innerHTML = `<div class="kv">No line-of-sight stars in cone.</div>`;
+        return;
+      }
+      for (const it of los){
+        const div = document.createElement("div");
+        div.className = "losItem";
+        div.innerHTML = `<b>${it.name}</b><br>${it.dist.toFixed(1)} ly ${it.behind ? "(behind)" : "(in front)"}`;
+        div.onclick = () => selectStar(it.id);
+        losList.appendChild(div);
+      }
+    }
+
+    function selectStar(id){
+      selectedId = id;
+      if (id == null){
+        infoMeta.textContent = "No target yet.";
+        renderLOS(null);
+        return;
+      }
+      const s = stars[id];
+      infoMeta.innerHTML = `
+        <div class="kv"><b>Name:</b> ${s.name}</div>
+        <div class="kv"><b>ID:</b> ${s.id}</div>
+        <div class="kv"><b>Magnitude:</b> ${s.mag.toFixed(2)}</div>
+        <div class="kv"><b>Position:</b> x=${s.pos.x.toFixed(1)}, y=${s.pos.y.toFixed(1)}, z=${s.pos.z.toFixed(1)}</div>
+      `;
+      renderLOS(id);
+    }
+
+    canvas.addEventListener("pointerdown", (e)=>{
+      if (hoverId != null){
+        selectStar(hoverId);
+        // a little camera nudge toward selection
+        controls.target.copy(stars[hoverId].pos);
+      }
+    });
+
+    // ---------- Resize ----------
+    function onResize(){
+      renderer.setSize(W(), H(), false);
+      camera.aspect = W()/H();
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener("resize", onResize);
+
+    // ---------- Animate ----------
+    function tick(){
+      controls.update();
+
+      const nearest = findNearestStar();
+      if (nearest !== hoverId){
+        setHover(nearest);
+        // reset idle/wiggle when switching targets so pickR doesn't balloon forever
+        idleMs = 0; wigglePx = 0;
+      }
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    // start with a default selection
+    selectStar(0);
+  })();
+  </script>
+</body>
+</html>
