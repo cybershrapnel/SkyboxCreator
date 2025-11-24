@@ -1123,14 +1123,6 @@
   // ✅ Renames persistence map (primaryId -> name)
   let renamedById = {};
 
-  // ✅ Map identity (uuid/meta) for session binding
-  let currentMapUUID = "";
-  let currentMapFilename = "";
-  let currentMapTitle = "";
-  let currentMapGalaxyType = "";
-  let currentMapSourceUrl = "";
-  let lastCatalogSourceMeta = null;
-
   var lastSelectedStarRaw = { x:0, y:0, z:0 };
 
   $("#jump_to_list").keydown(function (e) {
@@ -2221,31 +2213,6 @@
     });
   });
 
-  // ✅ Clears all cheat-sensitive / progress state
-  function resetProgressState(tag){
-    visitedLog = [];
-    visitedById = {};
-    colonyLog = [];
-    colonyById = {};
-    renamedById = {};
-    totalTravelDistanceLy = 0;
-    totalSessionMsAccum = 0;
-    sessionStartWallMs = Date.now();
-
-    try { closeVisitDetails(); } catch(e){}
-
-    renderVisitedList();
-    renderColonyList();
-
-    try { updateCatalogStats(); } catch(e){}
-    try { updateNearestStarsList(currentObjectMesh); } catch(e){}
-
-    // keep the UI quiet unless caller wants to show something
-    if (tag === "mapLoad" || tag === "sessionLoad") {
-      // no-op; status updates handled by caller
-    }
-  }
-
   function select(mesh, opts) {
     if (!mesh) return;
     opts = opts || {};
@@ -2547,6 +2514,48 @@
   const STARMAP_INDEX_URL = "https://xtdevelopment.net/chat-proxy/starmaps/starmaps.php";
   let mapAlive = false;
 
+  /* ===========================================================
+     ✅ MAP UUID / FINGERPRINT (to prevent wrong-map loads)
+     =========================================================== */
+  let currentMapUUID = null;
+  let currentMapSourceURL = null;
+
+  // lightweight stable hash (FNV-1a 32-bit)
+  function fnv1a32(str){
+    let h = 0x811c9dc5;
+    for (let i=0;i<str.length;i++){
+      h ^= str.charCodeAt(i);
+      h = (h + (h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24)) >>> 0;
+    }
+    return ("0000000" + h.toString(16)).slice(-8);
+  }
+
+  function computeCatalogUUID(obj, sourceHint){
+    try {
+      const stars = Array.isArray(obj.stars) ? obj.stars : [];
+      const planets = Array.isArray(obj.planets) ? obj.planets : [];
+      const sampleStars = stars.slice(0,50).map(s => ([
+        s.primaryId,
+        s.cartesianCoordsInLys?.x, s.cartesianCoordsInLys?.y, s.cartesianCoordsInLys?.z,
+        s.properName || s.name || ""
+      ]));
+      const samplePlanets = planets.slice(0,50).map(p => ([
+        p.primaryId, p.starId, p.type || "", p.properName || p.name || ""
+      ]));
+      const payload = JSON.stringify({
+        v:1,
+        starsLen: stars.length,
+        planetsLen: planets.length,
+        sampleStars,
+        samplePlanets,
+        source: sourceHint || ""
+      });
+      return "map-" + fnv1a32(payload);
+    } catch(e){
+      return "map-" + fnv1a32(String(Date.now()));
+    }
+  }
+
   function getHashCatalogURL() {
     if (!window.location.hash) return null;
     const raw = window.location.hash.substring(1).trim();
@@ -2597,7 +2606,38 @@
     currentObjectPrimaryId = "";
   }
 
-  function validateCatalogObject(obj) {
+  /* ===========================================================
+     ✅ Clear session / logging data on map-change or save-load
+     =========================================================== */
+  function resetSessionLogs(reason){
+    // travel + timing
+    totalTravelDistanceLy = 0;
+    totalSessionMsAccum = 0;
+    sessionStartWallMs = Date.now();
+
+    // renames / visits / colonies
+    renamedById = {};
+    visitedLog = [];
+    visitedById = {};
+    colonyLog = [];
+    colonyById = {};
+
+    // label cache / distances (avoid cross-map ghost labels)
+    labelCache = {};
+    lastDistance = null;
+    try { distanceHeader.text(""); } catch(e){}
+
+    renderVisitedList();
+    renderColonyList();
+    updateCatalogStats();
+    updateNearestStarsList(currentObjectMesh);
+
+    if (reason) {
+      console.log("Session logs reset:", reason);
+    }
+  }
+
+  function validateCatalogObject(obj, sourceHint) {
     if (!obj || typeof obj !== "object") throw new Error("Catalog is not an object.");
     if (!Array.isArray(obj.stars)) throw new Error("Catalog missing stars[] array.");
     if (!obj.planets) obj.planets = [];
@@ -2622,3 +2662,770 @@
         s.temperatureEstimate = { source:"DEFAULT", value:{ unit:"K", quantity:5000 } };
       }
       if (!s.nearbyObjectIDs) s.nearbyObjectIDs = [];
+      if (!s.identifiers) s.identifiers = {};
+    });
+
+    // determine UUID (use embedded if provided; else compute fingerprint)
+    const embeddedUUID =
+      (typeof obj.uuid === "string" && obj.uuid.trim()) ? obj.uuid.trim()
+      : (typeof obj.mapUUID === "string" && obj.mapUUID.trim()) ? obj.mapUUID.trim()
+      : (typeof obj.catalogUUID === "string" && obj.catalogUUID.trim()) ? obj.catalogUUID.trim()
+      : null;
+
+    obj.__mapUUID = embeddedUUID || computeCatalogUUID(obj, sourceHint || "");
+    obj.__sourceHint = sourceHint || "";
+
+    return obj;
+  }
+
+  function rebindLogMeshRefs(){
+    // if we reloaded SAME map, old mesh refs are stale. Re-wire them.
+    if (visitedLog && visitedLog.length){
+      visitedLog.forEach(v => {
+        if (!v) return;
+        v.meshRef = resolveMeshByPrimaryId(v.primaryId);
+        if (visitedById[v.primaryId]) visitedById[v.primaryId].meshRef = v.meshRef;
+      });
+    }
+    if (colonyLog && colonyLog.length){
+      colonyLog.forEach(c => {
+        if (!c) return;
+        c.meshRef = resolveMeshByPrimaryId(c.primaryId);
+        if (colonyById[c.primaryId]) colonyById[c.primaryId].meshRef = c.meshRef;
+      });
+    }
+  }
+
+  function applyCatalogObject(parsed, isCustom) {
+    const newUUID = parsed.__mapUUID || computeCatalogUUID(parsed, parsed.__sourceHint || "");
+    const newSource = parsed.__sourceHint || null;
+
+    if (!mapAlive) {
+      starData   = parsed.stars || [];
+      planetData = parsed.planets || [];
+      currentMapUUID = newUUID;
+      currentMapSourceURL = newSource || DEFAULT_CATALOG_URL;
+      return;
+    }
+
+    const oldUUID = currentMapUUID;
+    const isMapChange = !!(oldUUID && newUUID && String(oldUUID) !== String(newUUID));
+
+    resetCatalogScene();
+
+    currentMapUUID = newUUID;
+    currentMapSourceURL = newSource || currentMapSourceURL || DEFAULT_CATALOG_URL;
+
+    // ✅ if map actually changed, nuke all session logs so we don't smear saves across maps
+    if (isMapChange) {
+      resetSessionLogs("mapChange");
+    }
+
+    starData   = parsed.stars || [];
+    planetData = parsed.planets || [];
+
+    initializeobjectData();
+
+    // ✅ re-apply renames only if still present (same-map reload)
+    for (const pid in renamedById) {
+      applyRenameToData(pid, renamedById[pid]);
+    }
+
+    updateobjectData();
+
+    // ✅ if same map reload, fix meshRef pointers
+    if (!isMapChange) {
+      rebindLogMeshRefs();
+      renderVisitedList();
+      renderColonyList();
+    }
+
+    if (catalogStatusEl) {
+      catalogStatusEl.style.color = "#8f8";
+      catalogStatusEl.textContent =
+        "Loaded catalog (" + starData.length + " stars, " + planetData.length + " planets)." +
+        (isCustom ? " (custom)" : "") +
+        " UUID: " + currentMapUUID;
+    }
+
+    updateNearestStarsList(currentObjectMesh);
+    updateCatalogStats();
+  }
+
+  function cacheBust(url) {
+    const ts = Date.now();
+    return url + (url.indexOf("?") === -1 ? "?" : "&") + "ts=" + ts;
+  }
+
+  function loadCatalogFromURL(url, isCustom) {
+    if (catalogStatusEl) {
+      catalogStatusEl.style.color = "#ffb";
+      catalogStatusEl.textContent = "Loading catalog...";
+    }
+
+    return $.ajax({
+      type: "GET",
+      dataType: "text",
+      cache: false,
+      url: cacheBust(url),
+      success: function (data) {
+        try {
+          var obj = JSON.parse(data);
+
+          if (isCustom) obj = renameSolIfCustom(obj);
+
+          var parsed = validateCatalogObject(obj, url);
+          applyCatalogObject(parsed, !!isCustom);
+
+          if (!isCustom && catalogStatusEl && mapAlive) {
+            catalogStatusEl.style.color = "#cfcfcf";
+            catalogStatusEl.textContent = "Using server catalog. UUID: " + currentMapUUID;
+          }
+        } catch (e) {
+          if (catalogStatusEl) {
+            catalogStatusEl.style.color = "#f88";
+            catalogStatusEl.textContent = "Invalid catalog JSON.";
+          }
+        }
+      },
+      error: function () {
+        if (catalogStatusEl) {
+          catalogStatusEl.style.color = "#f88";
+          catalogStatusEl.textContent = "Catalog failed to load.";
+        }
+      }
+    });
+  }
+
+  if (loadCatalogBtn && catalogFileInput) {
+    loadCatalogBtn.addEventListener("click", function() {
+      catalogFileInput.value = "";
+      catalogFileInput.click();
+    });
+
+    catalogFileInput.addEventListener("change", function(ev) {
+      var file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function() {
+        try {
+          var raw = reader.result;
+          var obj = JSON.parse(raw);
+          obj = renameSolIfCustom(obj);
+          var parsed = validateCatalogObject(obj, "local_file:" + (file.name || "catalog.json"));
+          applyCatalogObject(parsed, true);
+        } catch(e) {
+          if (catalogStatusEl) {
+            catalogStatusEl.style.color = "#f88";
+            catalogStatusEl.textContent = "Invalid catalog JSON: " + e.message;
+          }
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  if (clearCatalogBtn) {
+    clearCatalogBtn.addEventListener("click", function () {
+      if (history && history.replaceState) {
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      loadCatalogFromURL(DEFAULT_CATALOG_URL, false);
+    });
+  }
+
+  function refreshStarmapList() {
+    if (!starmapListEl) return;
+    starmapListEl.innerHTML = '<div style="color:#888;">Loading list...</div>';
+
+    fetch(cacheBust(STARMAP_INDEX_URL), { cache: "no-store" })
+      .then(function(r){ return r.json(); })
+      .then(function(items){
+        starmapListEl.innerHTML = "";
+
+        if (!items || !items.length) {
+          starmapListEl.innerHTML = '<div style="color:#888;">No starmaps found.</div>';
+          return;
+        }
+
+        items.forEach(function(it){
+          var url  = (typeof it === "string") ? it : it.url;
+          var name = (typeof it === "string")
+            ? (it.split("/").pop())
+            : (it.name || (url ? url.split("/").pop() : "unknown.txt"));
+          var size = (typeof it === "string") ? "" : prettyBytes(it.size);
+
+          if (!url) return;
+
+          var row = document.createElement("div");
+          row.className = "starmap-item";
+          row.innerHTML =
+            '<span class="starmap-name"></span>' +
+            '<span class="starmap-size"></span>';
+
+          row.querySelector(".starmap-name").textContent = name;
+          row.querySelector(".starmap-size").textContent = size;
+
+          row.dataset.url = url;
+          row.onclick = function(){ loadCatalogFromURL(url, true); };
+
+          starmapListEl.appendChild(row);
+        });
+      })
+      .catch(function(){
+        starmapListEl.innerHTML = '<div style="color:#f88;">Failed to load list.</div>';
+      });
+  }
+
+  function loadInitialCatalog() {
+    var hashURL = getHashCatalogURL();
+    if (hashURL) return loadCatalogFromURL(hashURL, true);
+    return loadCatalogFromURL(DEFAULT_CATALOG_URL, false);
+  }
+
+  $.when(
+    loadInitialCatalog(),
+    shaders.loaders()
+  ).then(function () {
+    loader.load('js/font.js', function (response) {
+      font = response;
+      initializeobjectData();
+      animate();
+      updateobjectData();
+
+      mapAlive = true;
+      refreshStarmapList();
+
+      updateCatalogStats();
+      updateNearestStarsList(currentObjectMesh);
+
+      // ✅ if we had a pending save-state to apply (from Load button)
+      if (pendingLoadedState) {
+        const ok = applyLoadedStateNow(pendingLoadedState);
+        pendingLoadedState = null;
+        if (!ok) console.warn("Pending session not applied (uuid mismatch).");
+      }
+    });
+  });
+
+  window.addEventListener("hashchange", function() {
+    var hashURL = getHashCatalogURL();
+    if (hashURL) loadCatalogFromURL(hashURL, true);
+    else loadCatalogFromURL(DEFAULT_CATALOG_URL, false);
+  });
+
+  // Auto Explore
+  let autoExploreMode = false;
+  let autoExploreInterval;
+
+  function toggleAutoExplore() {
+    autoExploreMode = !autoExploreMode;
+
+    if (autoExploreMode) {
+      document.getElementById("autoExploreButton").innerText = "Stop Auto Explore";
+      startAutoExplore();
+    } else {
+      document.getElementById("autoExploreButton").innerText = "Start Auto Explore";
+      stopAutoExplore();
+    }
+  }
+
+  function startAutoExplore() {
+    autoExploreInterval = setInterval(function(){
+      const randomStar = getRandomVisibleStar();
+      if (randomStar) select(randomStar);
+    }, getRandomInterval(7000, 13000));
+  }
+
+  function stopAutoExplore() { clearInterval(autoExploreInterval); }
+
+  function getRandomVisibleStar() {
+    const allStars = visibleStars.concat(virtualStars);
+    return allStars[Math.floor(Math.random() * allStars.length)];
+  }
+
+  function getRandomInterval(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  document.getElementById("autoExploreButton").addEventListener("click", toggleAutoExplore);
+
+  /* ===========================================================
+     ✅ 2D Minimap (unchanged)
+     =========================================================== */
+
+  let minimapOpen = false;
+  let minimapZoom = 1.0;
+  const MINIMAP_ZOOM_MIN = 0.25;
+  const MINIMAP_ZOOM_MAX = 20.0;
+  const MINIMAP_BASE_PX_PER_LY = 4.0;
+
+  let minimapPlaneIndex = 0;
+  const minimapPlanes = [
+    { key:"XY", a:"x", b:"y" },
+    { key:"XZ", a:"x", b:"z" },
+    { key:"YZ", a:"y", b:"z" }
+  ];
+
+  const minimapPopup  = document.getElementById("minimapPopup");
+  const minimapCanvas = document.getElementById("minimapCanvas");
+  const mmCtx         = minimapCanvas ? minimapCanvas.getContext("2d") : null;
+  const axisLabelEl   = document.getElementById("minimapAxisLabel");
+
+  const minimapHoverNameEl = document.getElementById("minimapHoverName");
+  const minimapHoverDistEl = document.getElementById("minimapHoverDist");
+  let minimapHoverPid = null;
+
+  function getRawOf(mesh){
+    if (!mesh) return {x:0,y:0,z:0};
+    const c = mesh.objectData && mesh.objectData.cartesianCoordsInLys;
+    if (c) return c;
+    return {
+      x: mesh.position.x + (lastSelectedStarRaw?.x || 0),
+      y: mesh.position.y + (lastSelectedStarRaw?.y || 0),
+      z: mesh.position.z + (lastSelectedStarRaw?.z || 0)
+    };
+  }
+
+  function getMinimapCenterRaw(){
+    if (currentObjectMesh && currentObjectMesh.objectData && currentObjectMesh.objectData.cartesianCoordsInLys) {
+      return currentObjectMesh.objectData.cartesianCoordsInLys;
+    }
+    if (currentSystem && currentSystem.star && currentSystem.star.objectData.cartesianCoordsInLys) {
+      return currentSystem.star.objectData.cartesianCoordsInLys;
+    }
+    return {x:0,y:0,z:0};
+  }
+
+  function drawMinimap(){
+    if (!minimapOpen || !mmCtx || !minimapCanvas) return;
+
+    const w = minimapCanvas.width;
+    const h = minimapCanvas.height;
+
+    mmCtx.clearRect(0,0,w,h);
+    mmCtx.fillStyle = "rgba(0,0,0,0.92)";
+    mmCtx.fillRect(0,0,w,h);
+
+    const plane  = minimapPlanes[minimapPlaneIndex];
+    const center = getMinimapCenterRaw();
+    const pxPerLy = MINIMAP_BASE_PX_PER_LY * minimapZoom;
+
+    const fitLy = Math.min(w,h) / (2 * pxPerLy);
+    const displayRadiusLy = Math.min(renderRadius * 1.05, fitLy);
+
+    mmCtx.save();
+    mmCtx.translate(w/2, h/2);
+    mmCtx.strokeStyle = "rgba(255,255,255,0.10)";
+    mmCtx.beginPath();
+    mmCtx.arc(0,0,displayRadiusLy * pxPerLy,0,Math.PI*2);
+    mmCtx.stroke();
+
+    const all = stars.concat(virtualStars || []);
+
+    for (const s of all) {
+      if (!s || !s.objectData) continue;
+      const data = s.objectData;
+      if (data.type !== "STAR" && data.type !== "VIRTUAL_STAR") continue;
+      if (!isRender(data)) continue;
+
+      const raw = getRawOf(s);
+      const dx = raw[plane.a] - center[plane.a];
+      const dy = raw[plane.b] - center[plane.b];
+
+      if ((dx*dx + dy*dy) > displayRadiusLy*displayRadiusLy) continue;
+
+      const x = dx * pxPerLy;
+      const y = -dy * pxPerLy;
+
+      const isCurrent =
+        currentObjectMesh &&
+        currentObjectMesh.objectData &&
+        String(currentObjectMesh.objectData.primaryId) === String(data.primaryId);
+
+      mmCtx.fillStyle = isCurrent
+        ? "rgba(0,255,120,0.95)"
+        : (data.type === "VIRTUAL_STAR"
+            ? "rgba(255,255,255,0.55)"
+            : "rgba(150,180,255,0.80)");
+
+      const r = isCurrent ? 3.5 : 1.6;
+      mmCtx.beginPath();
+      mmCtx.arc(x, y, r, 0, Math.PI*2);
+      mmCtx.fill();
+    }
+
+    mmCtx.restore();
+
+    if (axisLabelEl) axisLabelEl.textContent = plane.key;
+  }
+
+  let lastMinimapDrawT = 0;
+  function maybeDrawMinimap(){
+    if (!minimapOpen) return;
+    const now = performance.now();
+    if (now - lastMinimapDrawT > 200) {
+      lastMinimapDrawT = now;
+      drawMinimap();
+    }
+  }
+
+  function clearMinimapHover(){
+    minimapHoverPid = null;
+    if (minimapHoverNameEl) minimapHoverNameEl.textContent = "Hover a star…";
+    if (minimapHoverDistEl) minimapHoverDistEl.textContent = "";
+    if (minimapCanvas) minimapCanvas.style.cursor = "default";
+  }
+
+  function updateMinimapHover(ev){
+    if (!minimapOpen || !minimapCanvas) return;
+
+    const rect = minimapCanvas.getBoundingClientRect();
+    const cx = ev.clientX - rect.left - rect.width/2;
+    const cy = ev.clientY - rect.top  - rect.height/2;
+
+    const plane  = minimapPlanes[minimapPlaneIndex];
+    const center = getMinimapCenterRaw();
+    const pxPerLy = MINIMAP_BASE_PX_PER_LY * minimapZoom;
+
+    const allStars = visibleStars.concat(virtualStars || []);
+    let best = null;
+    let bestPx = Infinity;
+
+    for (const s of allStars) {
+      if (!s || !s.objectData) continue;
+      if (!isRender(s.objectData)) continue;
+
+      const raw = getRawOf(s);
+      const sx = (raw[plane.a] - center[plane.a]) * pxPerLy;
+      const sy = -(raw[plane.b] - center[plane.b]) * pxPerLy;
+
+      const d = Math.hypot(sx - cx, sy - cy);
+      if (d < bestPx) { bestPx = d; best = s; }
+    }
+
+    const HOVER_THRESH_PX = 8;
+
+    if (best && bestPx <= HOVER_THRESH_PX) {
+      const pid = String(best.objectData.primaryId);
+      if (pid !== minimapHoverPid) {
+        minimapHoverPid = pid;
+        const name = best.objectData.properName || ("Star " + pid);
+
+        const raw = getRawOf(best);
+        const dx3 = raw.x - center.x;
+        const dy3 = raw.y - center.y;
+        const dz3 = raw.z - center.z;
+        const dist3 = Math.sqrt(dx3*dx3 + dy3*dy3 + dz3*dz3);
+
+        if (minimapHoverNameEl) minimapHoverNameEl.textContent = name;
+        if (minimapHoverDistEl) minimapHoverDistEl.textContent = prettyLy(dist3);
+      }
+      minimapCanvas.style.cursor = "pointer";
+    } else {
+      clearMinimapHover();
+    }
+  }
+
+  if (minimapCanvas) {
+    minimapCanvas.addEventListener("click", function(ev){
+      if (!minimapOpen) return;
+
+      const rect = minimapCanvas.getBoundingClientRect();
+      const cx = ev.clientX - rect.left - rect.width/2;
+      const cy = ev.clientY - rect.top  - rect.height/2;
+
+      const plane  = minimapPlanes[minimapPlaneIndex];
+      const center = getMinimapCenterRaw();
+      const pxPerLy = MINIMAP_BASE_PX_PER_LY * minimapZoom;
+
+      const allStars = visibleStars.concat(virtualStars || []);
+      let best = null;
+      let bestPx = Infinity;
+
+      for (const s of allStars) {
+        if (!s || !s.objectData) continue;
+        if (!isRender(s.objectData)) continue;
+
+        const raw = getRawOf(s);
+        const sx = (raw[plane.a] - center[plane.a]) * pxPerLy;
+        const sy = -(raw[plane.b] - center[plane.b]) * pxPerLy;
+
+        const d = Math.hypot(sx - cx, sy - cy);
+        if (d < bestPx) { bestPx = d; best = s; }
+      }
+
+      const CLICK_THRESH_PX = 6;
+      if (best && bestPx <= CLICK_THRESH_PX) {
+        select(best);
+        drawMinimap();
+      }
+    });
+
+    minimapCanvas.addEventListener("mousemove", updateMinimapHover);
+    minimapCanvas.addEventListener("mouseleave", clearMinimapHover);
+  }
+
+  const toggleMinimapBtn = document.getElementById("toggleMinimapBtn");
+  const minimapCloseBtn  = document.getElementById("minimapClose");
+  const mmZoomInBtn      = document.getElementById("minimapZoomIn");
+  const mmZoomOutBtn     = document.getElementById("minimapZoomOut");
+  const mmRotateBtn      = document.getElementById("minimapRotate");
+
+  function openMinimap(){
+    minimapOpen = true;
+    if (minimapPopup) minimapPopup.style.display = "block";
+    clearMinimapHover();
+    drawMinimap();
+  }
+  function closeMinimap(){
+    minimapOpen = false;
+    clearMinimapHover();
+    if (minimapPopup) minimapPopup.style.display = "none";
+  }
+  function toggleMinimap(){
+    if (minimapOpen) closeMinimap();
+    else openMinimap();
+  }
+
+  if (toggleMinimapBtn) toggleMinimapBtn.addEventListener("click", toggleMinimap);
+  if (minimapCloseBtn)  minimapCloseBtn.addEventListener("click", closeMinimap);
+
+  if (mmZoomInBtn) {
+    mmZoomInBtn.addEventListener("click", function(){
+      minimapZoom = Math.min(MINIMAP_ZOOM_MAX, minimapZoom * 1.35);
+      drawMinimap();
+    });
+  }
+  if (mmZoomOutBtn) {
+    mmZoomOutBtn.addEventListener("click", function(){
+      minimapZoom = Math.max(MINIMAP_ZOOM_MIN, minimapZoom / 1.35);
+      drawMinimap();
+    });
+  }
+  if (mmRotateBtn) {
+    mmRotateBtn.addEventListener("click", function(){
+      minimapPlaneIndex = (minimapPlaneIndex + 1) % minimapPlanes.length;
+      clearMinimapHover();
+      drawMinimap();
+    });
+  }
+
+  $(function(){
+    $("#minimapPopup").draggable({
+      handle: "#minimapHeader",
+      containment: "window"
+    });
+  });
+
+  /* ===========================================================
+     ✅ SAVE / LOAD SESSION (with map UUID lock)
+     =========================================================== */
+
+  const saveSessionBtn = document.getElementById("saveSessionBtn");
+  const loadSessionBtn = document.getElementById("loadSessionBtn");
+  const sessionFileInput = document.getElementById("sessionFileInput");
+
+  let pendingLoadedState = null;
+
+  function buildSaveObject(){
+    const nowISO = new Date().toISOString();
+    const totalSessionMs = getTotalSessionMsSoFar();
+    const sessionStartISO = new Date(sessionStartWallMs).toISOString();
+    const avgLyPerHour = (totalSessionMs > 0) ? totalTravelDistanceLy / (totalSessionMs/3600000) : 0;
+
+    const visited = visitedLog.map(v => ({
+      primaryId: v.primaryId,
+      type: v.type,
+      isStar: !!v.isStar,
+      name: v.name,
+      legLy: v.legLy,
+      starId: (v.meshRef && v.meshRef.objectData && v.meshRef.objectData.starId) || null
+    }));
+
+    const colonies = colonyLog.map(c => ({
+      primaryId: c.primaryId,
+      type: c.type,
+      name: c.name,
+      starId: c.starId || null
+    }));
+
+    return {
+      version: 2,
+      saveTimeISO: nowISO,
+
+      // ✅ map lock fields
+      mapUUID: currentMapUUID || null,
+      mapSourceURL: currentMapSourceURL || null,
+
+      sessionStartISO: sessionStartISO,
+      totalSessionMs: totalSessionMs,
+      totalTravelDistanceLy: totalTravelDistanceLy,
+      avgLyPerHour: avgLyPerHour,
+      renames: renamedById,
+      visited: visited,
+      colonies: colonies,
+      lastSelectedPrimaryId: currentObjectPrimaryId || null
+    };
+  }
+
+  function downloadJSON(obj, filename){
+    const json = JSON.stringify(obj, null, 2);
+    const blob = new Blob([json], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function saveSession(){
+    const obj = buildSaveObject();
+    const fname = "mequavis_session_" + (new Date().toISOString().replace(/[:.]/g,"-")) + ".json";
+    downloadJSON(obj, fname);
+  }
+
+  function applyLoadedStateNow(state){
+    if (!state || typeof state !== "object") return false;
+
+    // ✅ UUID check (hard stop)
+    if (state.mapUUID && currentMapUUID && String(state.mapUUID) !== String(currentMapUUID)) {
+      const msg = "Session belongs to a different map.\n\n" +
+                  "Save UUID: " + state.mapUUID + "\n" +
+                  "Current UUID: " + currentMapUUID + "\n\n" +
+                  "Load the correct starmap first (or let the loader auto-switch).";
+      console.warn(msg);
+      alert(msg);
+      return false;
+    }
+
+    // ✅ wipe logging vars before applying save
+    resetSessionLogs("loadSave");
+
+    // timing
+    totalSessionMsAccum = Math.max(0, Number(state.totalSessionMs) || 0);
+    sessionStartWallMs = Date.now();
+
+    // distance
+    totalTravelDistanceLy = Number(state.totalTravelDistanceLy) || 0;
+
+    // renames
+    renamedById = state.renames && typeof state.renames === "object" ? state.renames : {};
+    for (const pid in renamedById) {
+      applyRenameToData(pid, renamedById[pid]);
+    }
+
+    // visited
+    visitedLog = [];
+    visitedById = {};
+    if (Array.isArray(state.visited)) {
+      state.visited.forEach(v => {
+        if (!v || v.primaryId == null) return;
+        const pid = String(v.primaryId);
+        visitedById[pid] = {
+          primaryId: pid,
+          type: v.type || "OBJECT",
+          isStar: !!v.isStar,
+          name: v.name || ("Object " + pid),
+          meshRef: resolveMeshByPrimaryId(pid),
+          legLy: Number(v.legLy) || 0
+        };
+        visitedLog.push(visitedById[pid]);
+      });
+    }
+    renderVisitedList();
+
+    // colonies
+    colonyLog = [];
+    colonyById = {};
+    if (Array.isArray(state.colonies)) {
+      state.colonies.forEach(c => {
+        if (!c || c.primaryId == null) return;
+        const pid = String(c.primaryId);
+        colonyById[pid] = {
+          primaryId: pid,
+          type: c.type || "PLANET",
+          name: c.name || ("Colony " + pid),
+          meshRef: resolveMeshByPrimaryId(pid),
+          starId: c.starId || null
+        };
+        colonyLog.push(colonyById[pid]);
+      });
+    }
+    renderColonyList();
+
+    updateobjectData();
+    updateCatalogStats();
+    updateNearestStarsList(currentObjectMesh);
+
+    // restore last selected object if possible
+    if (state.lastSelectedPrimaryId != null) {
+      travelToPrimaryId(String(state.lastSelectedPrimaryId));
+    }
+
+    return true;
+  }
+
+  function loadSessionFile(file){
+    const reader = new FileReader();
+    reader.onload = function(){
+      try {
+        const state = JSON.parse(reader.result);
+
+        // ✅ if map not ready yet, park it
+        if (!mapAlive) {
+          pendingLoadedState = state;
+          return;
+        }
+
+        // ✅ if save uuid mismatches current map, auto-load matching map if possible
+        if (state.mapUUID && currentMapUUID && String(state.mapUUID) !== String(currentMapUUID)) {
+          if (state.mapSourceURL && /^https?:\/\//i.test(state.mapSourceURL)) {
+            pendingLoadedState = state;
+            if (catalogStatusEl) {
+              catalogStatusEl.style.color = "#ffb";
+              catalogStatusEl.textContent = "Loading session map...";
+            }
+            loadCatalogFromURL(state.mapSourceURL, true);
+          } else {
+            const msg = "Session belongs to a different map.\n\n" +
+                        "Save UUID: " + state.mapUUID + "\n" +
+                        "Current UUID: " + currentMapUUID + "\n\n" +
+                        "Load the right starmap first.";
+            console.warn(msg);
+            alert(msg);
+          }
+          return;
+        }
+
+        applyLoadedStateNow(state);
+      } catch(e){
+        console.error("Bad session file:", e);
+        alert("Bad session file: " + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  if (saveSessionBtn) saveSessionBtn.addEventListener("click", saveSession);
+
+  if (loadSessionBtn && sessionFileInput) {
+    loadSessionBtn.addEventListener("click", function(){
+      sessionFileInput.value = "";
+      sessionFileInput.click();
+    });
+
+    sessionFileInput.addEventListener("change", function(ev){
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      loadSessionFile(file);
+    });
+  }
+</script>
+
+</body>
+</html>
