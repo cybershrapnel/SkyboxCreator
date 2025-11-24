@@ -1279,31 +1279,37 @@
     }
 
     const reader = new FileReader();
-    reader.onload = function() {
-      try {
-        const parsed = JSON.parse(reader.result);
+reader.onload = function() {
+  try {
+    const parsed = JSON.parse(reader.result);
 
-        if (!parsed || !Array.isArray(parsed.stars)) {
-          throw new Error("Missing stars[] array in catalog.");
-        }
-        if (!parsed.planets) parsed.planets = [];
+    if (!parsed || !Array.isArray(parsed.stars)) {
+      throw new Error("Missing stars[] array in catalog.");
+    }
+    if (!parsed.planets) parsed.planets = [];
 
-        // store locally (still NOT server upload)
-        localStorage.setItem("customStarCatalog", JSON.stringify(parsed));
+    // Try to store locally, but don't fail the load if quota is exceeded
+    try {
+      localStorage.setItem("customStarCatalog", JSON.stringify(parsed));
+      localStatusEl.style.color = "#8f8";
+      localStatusEl.textContent = `Loaded + cached local catalog (${parsed.stars.length} stars).`;
+    } catch (storageErr) {
+      console.warn("Catalog too large for localStorage, loading without caching.", storageErr);
+      localStatusEl.style.color = "#ff8";
+      localStatusEl.textContent =
+        `Loaded local catalog (${parsed.stars.length} stars), but it's too large to cache in browser.`;
+    }
 
-        // hot-load into the running skybox
-        loadCatalogObject(parsed);
+    // Hot-load into the running skybox regardless of caching success
+    loadCatalogObject(parsed);
 
-        localStatusEl.style.color = "#8f8";
-        localStatusEl.textContent = `Loaded local catalog (${parsed.stars.length} stars).`;
-      } catch(e) {
-        console.error(e);
-        localStatusEl.style.color = "#f88";
-        localStatusEl.textContent = "Invalid catalog JSON: " + e.message;
-      }
-    };
-    reader.readAsText(file);
-  });
+  } catch(e) {
+    console.error(e);
+    localStatusEl.style.color = "#f88";
+    localStatusEl.textContent = "Invalid catalog JSON: " + e.message;
+  }
+};
+
 
   localClearBtn.addEventListener("click", function(){
     localStorage.removeItem("customStarCatalog");
