@@ -40,6 +40,27 @@
       font-size: 12px;
       cursor: pointer;
     }
+
+    /* NEW starmap list styling */
+    #starmapListContainer {
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid #444;
+      padding: 4px;
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.3;
+      background: rgba(0,0,0,0.25);
+    }
+    .starmap-item {
+      padding: 4px 2px;
+      cursor: pointer;
+      border-bottom: 1px solid #333;
+      word-break: break-word;
+    }
+    .starmap-item:hover {
+      background: #222;
+    }
   </style>
 </head>
 
@@ -89,6 +110,12 @@
         <button id="clearCatalogBtn" class="catalog-btn">Clear Local Catalog</button>
         <input id="catalogFileInput" type="file" accept=".txt,.json,application/json,text/plain" style="display:none;">
         <div id="catalogStatus">Using server catalog.</div>
+
+        <!-- NEW: Scrollable starmap list -->
+        <div style="margin-top:8px; font-size:12px; color:#cfcfcf;">
+          Available Starmaps (click to load):
+        </div>
+        <div id="starmapListContainer">Loading starmaps...</div>
       </div>
     </div>
 
@@ -283,7 +310,8 @@
     $("#selector").accordion({
       collapsible: true,
       animate: 100,
-      heightStyle: 'panel'
+      heightStyle: 'panel',
+      active: 4   // NEW: open Catalog tab by default
     });
   });
 
@@ -1085,14 +1113,17 @@
 
   var loader = new THREE.FontLoader();
 
-  // ========= NEW catalog loading helpers =========
+  // ========= catalog loading helpers =========
   const catalogStatusEl = document.getElementById("catalogStatus");
   const loadCatalogBtn = document.getElementById("loadCatalogBtn");
   const clearCatalogBtn = document.getElementById("clearCatalogBtn");
   const catalogFileInput = document.getElementById("catalogFileInput");
   const MAX_LOCALSTORAGE_CHARS = 3.5 * 1024 * 1024; // ~3.5MB safe limit
 
-  // NEW: detect hash URL (index.html#https://example.com/star_catalog.txt)
+  // NEW starmap list element
+  const starmapListEl = document.getElementById("starmapListContainer");
+
+  // detect hash URL (index.html#https://example.com/star_catalog.txt)
   function getHashCatalogURL() {
     console.log("[hash] raw location.hash =", window.location.hash);
 
@@ -1111,7 +1142,7 @@
     return null;
   }
 
-  // NEW: rename Sol on custom loads
+  // rename Sol on custom loads
   function renameSolIfCustom(catalogObj) {
     if (!catalogObj || !Array.isArray(catalogObj.stars)) return catalogObj;
     const rand = Math.floor(Math.random() * 900000) + 100000; // 6-digit
@@ -1149,7 +1180,6 @@
     currentObjectPrimaryId = "";
   }
 
-  // MOD: applyCatalogObject now takes isCustom
   function applyCatalogObject(dataParsed, isCustom) {
     resetCatalogScene();
 
@@ -1200,39 +1230,67 @@
     return obj;
   }
 
+  // NEW: load a catalog from an arbitrary URL (for list clicks)
+  function loadCatalogFromURL(url, isCustom=true) {
+    console.log("[catalog] loadCatalogFromURL:", url);
+
+    catalogStatusEl.style.color = "#ffb";
+    catalogStatusEl.textContent = "Loading starmap from URL...";
+
+    return $.ajax({
+      type: 'GET',
+      dataType: 'text',
+      url: url,
+      cache: false,
+      success: function (data) {
+        console.log("[catalog] URL fetch SUCCESS, bytes =", data.length);
+
+        let dataParsed = validateCatalogObject(JSON.parse(data));
+        if (isCustom) dataParsed = renameSolIfCustom(dataParsed);
+
+        // cache custom loads if small enough
+        try {
+          const rawStr = JSON.stringify(dataParsed);
+          if (rawStr.length <= MAX_LOCALSTORAGE_CHARS) {
+            localStorage.setItem("customStarCatalog", rawStr);
+          }
+        } catch(e){}
+
+        applyCatalogObject(dataParsed, isCustom);
+      },
+      error: function (xhr, status, err) {
+        console.error("[catalog] URL fetch ERROR", { status, err, xhr });
+        catalogStatusEl.style.color = "#f88";
+        catalogStatusEl.textContent = "Failed to load starmap URL.";
+      }
+    });
+  }
+
   loadCatalogBtn.addEventListener("click", function() {
     catalogFileInput.value = "";
     catalogFileInput.click();
   });
 
-  // ✅ FIXED CLEAR BUTTON: reloads default server catalog live
+  // MOD: clear button now reloads server catalog immediately
   clearCatalogBtn.addEventListener("click", function() {
-    // kill local custom cache
+    console.log("[catalog] clear -> reload server catalog");
     localStorage.removeItem("customStarCatalog");
 
-    // kill hash custom URL so it doesn't override again
-    if (window.location.hash) {
-      history.replaceState(null, document.title,
-        window.location.pathname + window.location.search
-      );
-    }
+    // clear hash without reloading the page
+    history.replaceState(null, "", window.location.pathname + window.location.search);
 
     catalogStatusEl.style.color = "#ffb";
     catalogStatusEl.textContent = "Reloading server catalog...";
 
     $.ajax({
-      type: "GET",
-      dataType: "html",
+      type: 'GET',
+      dataType: 'text',
       url: "star_catalog.txt",
       cache: false,
-      success: function(data) {
+      success: function (data) {
         try {
-          var dataParsed = JSON.parse(data);
-          dataParsed = validateCatalogObject(dataParsed);
-
-          // apply as non-custom so Sol stays Sol
-          applyCatalogObject(dataParsed, false);
-
+          const parsed = validateCatalogObject(JSON.parse(data));
+          applyCatalogObject(parsed, false);
           catalogStatusEl.style.color = "#cfcfcf";
           catalogStatusEl.textContent = "Using server catalog.";
         } catch(e) {
@@ -1241,15 +1299,15 @@
           catalogStatusEl.textContent = "Server catalog invalid: " + e.message;
         }
       },
-      error: function(xhr, status, err) {
-        console.error("[catalog] server reload ERROR", { status, err, xhr });
+      error: function (xhr, status, err) {
+        console.error("Server catalog reload failed", {status, err, xhr});
         catalogStatusEl.style.color = "#f88";
         catalogStatusEl.textContent = "Failed to reload server catalog.";
       }
     });
   });
 
-  // MOD: local file load counts as custom => rename Sol
+  // local file load counts as custom => rename Sol
   catalogFileInput.addEventListener("change", function(ev) {
     const file = ev.target.files && ev.target.files[0];
     if (!file) return;
@@ -1279,7 +1337,7 @@
     reader.readAsText(file);
   });
 
-  // MOD: hash URL takes top priority over cache/default
+  // hash URL takes priority on startup
   function loadInitialCatalogThenStart() {
     const hashURL = getHashCatalogURL();
     console.log("[catalog] hashURL =", hashURL);
@@ -1321,7 +1379,6 @@
     return loadFallbackCatalog();
   }
 
-  // NEW: previous cache/default logic moved here
   function loadFallbackCatalog() {
     const cached = localStorage.getItem("customStarCatalog");
     if (cached) {
@@ -1342,7 +1399,7 @@
 
     return $.ajax({
       type: 'GET',
-      dataType: 'html',
+      dataType: 'text',
       url: "star_catalog.txt",
       success: function (data) {
         var dataParsed = JSON.parse(data);
@@ -1354,7 +1411,70 @@
       }
     });
   }
-  // ========= END new catalog helpers =========
+
+  // ========= NEW: starmap list fetching =========
+  function populateStarmapList(urls) {
+    starmapListEl.innerHTML = "";
+
+    if (!urls || !urls.length) {
+      starmapListEl.textContent = "No starmaps found.";
+      return;
+    }
+
+    urls.forEach((u) => {
+      const item = document.createElement("div");
+      item.className = "starmap-item";
+      item.textContent = u;
+      item.title = u;
+
+      item.addEventListener("click", () => {
+        // set hash for shareability / future reloads
+        window.location.hash = encodeURIComponent(u);
+        loadCatalogFromURL(u, true);
+      });
+
+      starmapListEl.appendChild(item);
+    });
+  }
+
+  async function fetchStarmapURLs() {
+    starmapListEl.textContent = "Loading starmaps...";
+    try {
+      const resp = await fetch(
+        "http://xtdevelopment.net/chat-proxy/starmaps/starmaps.php",
+        { cache: "no-store" }
+      );
+      if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
+
+      const text = await resp.text();
+      console.log("[starmaps] raw response:", text.slice(0, 300));
+
+      let urls = null;
+
+      // try JSON shapes first
+      try {
+        const json = JSON.parse(text);
+        if (Array.isArray(json)) urls = json;
+        else if (json && Array.isArray(json.urls)) urls = json.urls;
+        else if (json && Array.isArray(json.starmaps)) urls = json.starmaps;
+        else if (json && Array.isArray(json.data)) urls = json.data;
+      } catch(e) {
+        // not JSON
+      }
+
+      // fallback: newline-separated text
+      if (!urls) {
+        urls = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      }
+
+      populateStarmapList(urls);
+
+    } catch (e) {
+      console.error("[starmaps] fetch failed", e);
+      starmapListEl.textContent = "Failed to load starmap list.";
+    }
+  }
+  // ========= END starmap list fetching =========
 
   $.when(
       loadInitialCatalogThenStart(),
@@ -1368,6 +1488,9 @@
         }
     );
   });
+
+  // kick off list fetch after DOM exists
+  fetchStarmapURLs();
 
   // Auto Explore
   let autoExploreMode = false;
