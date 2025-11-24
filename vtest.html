@@ -523,6 +523,26 @@
   <canvas id='webgl_canvas'></canvas>
 </div>
 
+<!-- ==========================
+     Draggable Minimap Popup
+     ========================== -->
+<div id="minimapPopup">
+  <div id="minimapHeader">
+    <span>Star Minimap</span>
+    <button id="minimapClose" title="Close">×</button>
+  </div>
+
+  <canvas id="minimapCanvas" width="280" height="280"></canvas>
+
+  <div id="minimapControls">
+    <button id="minimapZoomIn" title="Zoom in">Zoom +</button>
+    <button id="minimapZoomOut" title="Zoom out">Zoom −</button>
+    <button id="minimapRotate" title="Rotate axis plane">Rotate Axis</button>
+    <span id="minimapAxisLabel">XY</span>
+    <div id="minimapHint">Click a star dot to jump to it in 3D (works best when zoomed in).</div>
+  </div>
+</div>
+  
 <script>
   // visits counter
   const pageURL = encodeURIComponent(window.location.href);
@@ -2275,27 +2295,6 @@ $(function(){
 
   
 </script>
-
-<!-- ==========================
-     Draggable Minimap Popup
-     ========================== -->
-<div id="minimapPopup">
-  <div id="minimapHeader">
-    <span>Star Minimap</span>
-    <button id="minimapClose" title="Close">×</button>
-  </div>
-
-  <canvas id="minimapCanvas" width="280" height="280"></canvas>
-
-  <div id="minimapControls">
-    <button id="minimapZoomIn" title="Zoom in">Zoom +</button>
-    <button id="minimapZoomOut" title="Zoom out">Zoom −</button>
-    <button id="minimapRotate" title="Rotate axis plane">Rotate Axis</button>
-    <span id="minimapAxisLabel">XY</span>
-    <div id="minimapHint">Click a star dot to jump to it in 3D (works best when zoomed in).</div>
-  </div>
-</div>
-
   
 </body>
 </html>
