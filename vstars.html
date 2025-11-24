@@ -28,6 +28,18 @@
 
   <!-- Catalog UI styles -->
   <style>
+    /* make Characteristics + LOS + Nearest + Stats scroll inside the panel */
+#infoPanel{
+  max-height: 70vh;      /* tweak if you want more/less */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;    /* keeps scrollbar off your text */
+  box-sizing: border-box;
+}
+#infoPanel::-webkit-scrollbar { width: 8px; }
+#infoPanel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 6px; }
+#infoPanel::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+
     #catalogStatus {
       font-size: 11px;
       line-height: 1.3;
@@ -232,7 +244,7 @@
   <div id="selector">
     <h3><span id="info-header" class="accordion-header"></span><b> - <span id="distance-header"
                                                                            class="accordion-header"></span></b></h3>
-    <div class="overlay-panel">
+    <div class="overlay-panel" id="infoPanel">
       <table>
         <tbody id="info-table"></tbody>
       </table>
