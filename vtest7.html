@@ -2022,26 +2022,46 @@
   }
 
   // ✅ filter helper so nothing out-of-range hits any list
-  function isEntryInRenderRange(entry){
-    if (!entry || entry.primaryId == null) return false;
-    const pid = String(entry.primaryId);
+function isEntryInRenderRange(entry){
+  if (!entry || entry.primaryId == null) return false;
+  const pid = String(entry.primaryId);
 
-    // stars: use solDistance
-    if (entry.isStar) {
-      const sdata = findStarDataByPrimaryId(pid);
-      if (!sdata || !sdata.solDistance) return false;
-      return (sdata.solDistance.value.quantity < renderRadius);
+  // ✅ allow virtual stars using their own objectData
+  if (entry.type === "VIRTUAL_STAR") {
+    const m = entry.meshRef;
+    const d = m && m.objectData && m.objectData.solDistance
+      ? m.objectData.solDistance.value.quantity
+      : null;
+
+    if (d != null && isFinite(d)) return d < renderRadius;
+
+    // fallback: compute from raw coords if solDistance missing
+    const c = m && m.objectData && m.objectData.cartesianCoordsInLys;
+    if (c) {
+      const dist = Math.sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
+      return dist < renderRadius;
     }
+    return true; // if we can't tell, don't hide it
+  }
 
-    // planets: only show if their parent star is render-visible
-    const pdata = findPlanetDataByPrimaryId(pid);
-    const starId = (pdata && pdata.starId != null) ? String(pdata.starId) : (entry.starId != null ? String(entry.starId) : null);
-    if (!starId) return false;
-
-    const sdata = findStarDataByPrimaryId(starId);
+  // stars: use solDistance from catalog
+  if (entry.isStar) {
+    const sdata = findStarDataByPrimaryId(pid);
     if (!sdata || !sdata.solDistance) return false;
     return (sdata.solDistance.value.quantity < renderRadius);
   }
+
+  // planets: only show if their parent star is render-visible
+  const pdata = findPlanetDataByPrimaryId(pid);
+  const starId = (pdata && pdata.starId != null) ? String(pdata.starId)
+               : (entry.starId != null ? String(entry.starId) : null);
+  if (!starId) return false;
+
+  const sdata = findStarDataByPrimaryId(starId);
+  if (!sdata || !sdata.solDistance) return false;
+  return (sdata.solDistance.value.quantity < renderRadius);
+}
+
 
   function computeLegLy(prevMesh, newMesh){
     if (!prevMesh || !newMesh) return 0;
