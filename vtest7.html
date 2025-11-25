@@ -3729,11 +3729,13 @@ function saveCurrentCatalog(){
       starId: h.starId || null
     }));
 
-    const mapUUIDToSave = currentMapUUID || null;
+const mapUUIDToSave = currentMapUUID || null;
 
 return {
   version: 2,
-  __meq_appendix: { uuid: currentMapUUID || null },
+
+  // ✅ ONLY ONE UUID FIELD, TOP-LEVEL
+  uuid: mapUUIDToSave,
 
   saveTimeISO: nowISO,
   sessionStartISO: sessionStartISO,
@@ -3746,6 +3748,7 @@ return {
   homeworlds,
   lastSelectedPrimaryId: currentObjectPrimaryId || null
 };
+
 
 
   }
@@ -3811,14 +3814,18 @@ if (saveCatalogBtn) {
   function applyLoadedStateNow(state){
     if (!state || typeof state !== "object") return;
 
-    const stateUUID = (
-      (state.__meq_appendix && state.__meq_appendix.uuid) ||  // ✅ your real session shape
-      state.mapUUID ||
-      state.uuid ||
-      state.catalogUUID ||
-      (state.meta && (state.meta.uuid || state.meta.mapUUID)) ||
-      null
-    );
+const stateUUID = (
+  // ✅ new correct session shape
+  state.uuid ||
+
+  // ✅ tolerate old saves
+  state.mapUUID ||
+  (state.__meq_appendix && state.__meq_appendix.uuid) ||
+  state.catalogUUID ||
+  (state.meta && (state.meta.uuid || state.meta.mapUUID)) ||
+  null
+);
+
 
     // ✅ if map has a UUID, session MUST have one
     if (currentMapUUID && !stateUUID) {
