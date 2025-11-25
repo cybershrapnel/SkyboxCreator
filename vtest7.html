@@ -3294,14 +3294,32 @@ function refreshStarmapList() {
   if (!starmapListEl) return;
   starmapListEl.innerHTML = '<div style="color:#888;">Loading list...</div>';
 
+  // --- Patch cacheBust so it ignores blob: URLs (fixes net::ERR_FILE_NOT_FOUND on blob) ---
+  try {
+    if (typeof window !== "undefined" &&
+        typeof cacheBust === "function" &&
+        !window.__cacheBustPatchedForBlob) {
+      window.__origCacheBust = cacheBust;
+      cacheBust = function (url) {
+        if (url && typeof url === "string" && url.indexOf("blob:") === 0) {
+          // Don't append ?ts=... to blob URLs
+          return url;
+        }
+        return window.__origCacheBust(url);
+      };
+      window.__cacheBustPatchedForBlob = true;
+    }
+  } catch (e) {
+    // if anything weird happens, don't break the function
+    console.warn("cacheBust blob-patch failed:", e);
+  }
+
   // --- Helper: rewrite GitHub release URLs to raw GitHub URLs ---
   function rewriteToRawUrl(url) {
     if (!url) return url;
     const ghPrefix = "https://github.com/cybershrapnel/skybox/releases/download/starmaps/";
     if (url.startsWith(ghPrefix)) {
       const filename = url.substring(ghPrefix.length);
-      // New raw URL form:
-      // https://raw.githubusercontent.com/cybershrapnel/skybox/refs/heads/master/starmaps/filename.txt
       return "https://raw.githubusercontent.com/cybershrapnel/skybox/refs/heads/master/starmaps/" + filename;
     }
     return url;
@@ -3310,24 +3328,14 @@ function refreshStarmapList() {
   // --- Helper: do we treat this URL as a chunked starmap? ---
   function isChunkedStarmapUrl(url) {
     if (!url) return false;
-    // We assume any .txt starmap is chunked into .meq + .Sxx files.
+    // Any .txt in starmaps is treated as chunked (.meq + .Sxx)
     return url.toLowerCase().endsWith(".txt");
   }
 
   // --- Helper: load starmap from .meq + .Sxx pieces and call loadCatalogFromURL() ---
   function loadStarmapFromChunks(baseTxtUrl) {
-    // baseTxtUrl is e.g.:
-    //   https://raw.githubusercontent.com/.../starmaps/Galactic-Sector-2.txt
-    // We will fetch:
-    //   baseTxtUrl + ".meq"
-    //   baseTxtUrl + ".S01", ".S02", ... up to __meq_segment_count
+    // baseTxtUrl: e.g. https://raw.githubusercontent.com/.../starmaps/Galactic-Sector-2.txt
     const meqUrl = cacheBust(baseTxtUrl + ".meq");
-
-    // Optional: small UI hint
-    if (starmapListEl) {
-      // don't nuke the list, just show a subtle status somewhere if you want
-      // (left blank here to avoid messing up your layout)
-    }
 
     fetch(meqUrl, { cache: "no-store" })
       .then(function (r) {
@@ -3345,7 +3353,6 @@ function refreshStarmapList() {
           throw new Error("No __meq_segment_count found in MEQ file");
         }
 
-        // Fetch each segment as raw bytes
         const segPromises = [];
         for (let i = 1; i <= segCount; i++) {
           const suffix = ".S" + String(i).padStart(2, "0"); // .S01, .S02, ...
@@ -3368,7 +3375,7 @@ function refreshStarmapList() {
         const meqData = bundle.meqData || {};
         const buffers = bundle.buffers || [];
 
-        // Concatenate all bytes in order so we correctly handle UTF-8 boundaries
+        // Concatenate all bytes in order
         let totalLen = 0;
         buffers.forEach(function (buf) { totalLen += buf.byteLength; });
 
@@ -3380,7 +3387,7 @@ function refreshStarmapList() {
           offset += chunkBytes.length;
         });
 
-        // Decode full JSON text in one go
+        // Decode full JSON text once
         const decoder = new TextDecoder("utf-8");
         const mainJsonText = decoder.decode(allBytes);
 
@@ -3392,18 +3399,15 @@ function refreshStarmapList() {
           throw e;
         }
 
-        // Merge main JSON with MEQ JSON.
-        // "Chunks first, MEQ appended last" in object terms = merge keys, MEQ keys at the end.
-        // (Object.assign order ensures meqData keys overlay if there were any collisions.)
+        // Merge: chunks first, MEQ fields appended last
         const finalObj = Object.assign({}, mainObj, meqData);
-
         const finalText = JSON.stringify(finalObj);
 
-        // Create a blob URL so we can reuse existing loadCatalogFromURL() unchanged.
         const blob = new Blob([finalText], { type: "application/json" });
         const blobUrl = URL.createObjectURL(blob);
 
-        // Use your existing catalog loader
+        // IMPORTANT: loadCatalogFromURL will still call cacheBust,
+        // but cacheBust now returns blob: URLs unchanged.
         loadCatalogFromURL(blobUrl, true);
       })
       .catch(function (err) {
@@ -3428,7 +3432,6 @@ function refreshStarmapList() {
 
     nameSpan.textContent = name || (url.split("/").pop() || "unknown.txt");
 
-    // tiny icon for archive maps
     if (fromArchive) {
       const icon = document.createElement("span");
       icon.className = "starmap-archive-icon";
@@ -3441,12 +3444,9 @@ function refreshStarmapList() {
     row.dataset.url = url;
     row.onclick = function () {
       const targetUrl = row.dataset.url;
-
       if (isChunkedStarmapUrl(targetUrl)) {
-        // Use MEQ + .Sxx pieces, not the .txt file.
         loadStarmapFromChunks(targetUrl);
       } else {
-        // Fallback: normal behavior (for any non-txt starmaps you still have)
         loadCatalogFromURL(targetUrl, true);
       }
     };
@@ -3468,13 +3468,12 @@ function refreshStarmapList() {
 
         items.forEach(function (it) {
           let url = (typeof it === "string") ? it : it.url;
-          url = rewriteToRawUrl(url); // rewrite GitHub URLs if present
+          url = rewriteToRawUrl(url);
 
           const name = (typeof it === "string")
             ? (url.split("/").pop())
             : (it.name || (url ? url.split("/").pop() : "unknown.txt"));
 
-          // old PHP endpoint likely returns numeric bytes
           const size = (typeof it === "string")
             ? ""
             : (it.size != null ? prettyBytes(it.size) : "");
@@ -3488,7 +3487,6 @@ function refreshStarmapList() {
         });
       })
       .catch(function () {
-        // If archive already drew something, don't nuke it
         if (!starmapListEl.innerHTML.trim()) {
           starmapListEl.innerHTML = '<div style="color:#f88;">Failed to load server list.</div>';
         }
@@ -3506,13 +3504,11 @@ function refreshStarmapList() {
 
       if (Array.isArray(archiveItems) && archiveItems.length) {
         archiveItems.forEach(function (it) {
-          // structure:
-          // { filename, url, size: "210 MB", sha256: "..." }
           let url = it.url;
-          url = rewriteToRawUrl(url); // convert GitHub release URL -> raw URL
+          url = rewriteToRawUrl(url);
 
           const name = it.filename || (url ? url.split("/").pop() : "unknown.txt");
-          const size = it.size || "";  // already human-readable ("210 MB")
+          const size = it.size || "";
 
           appendStarmapRow({
             name,
@@ -3525,13 +3521,12 @@ function refreshStarmapList() {
     })
     .catch(function (err) {
       console.warn("Archive list failed:", err);
-      // leave "Loading..." text in place; PHP load will overwrite
     })
     .finally(function () {
-      // Only after archive attempt do we hit your PHP server
       loadPhpList();
     });
 }
+
 
 
 
