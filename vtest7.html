@@ -1007,38 +1007,39 @@
   const virtualStarAmpSlider = document.getElementById("virtualStarAmpSlider");
   const virtualStarAmpValue  = document.getElementById("virtualStarAmpValue");
 
-function attachPlanetClickProxy(planetMesh, radiusMult = 6) {
-  if (!planetMesh || !planetMesh.geometry || !planetMesh.objectData) return null;
+function attachPlanetClickProxy(planetMesh, radiusMult=8){
+  if (!planetMesh) return null;
 
-  // get a base radius from the visible mesh
-  if (!planetMesh.geometry.boundingSphere) {
-    planetMesh.geometry.computeBoundingSphere();
+  // try geometry size first
+  let r = 0.2;
+  if (planetMesh.geometry && planetMesh.geometry.boundingSphere) {
+    r = planetMesh.geometry.boundingSphere.radius;
+  } else if (planetMesh.objectData?.radius?.value?.quantity) {
+    r = planetMesh.objectData.radius.value.quantity * 3000000; // rough scale match
   }
-  const baseR = planetMesh.geometry.boundingSphere
-    ? planetMesh.geometry.boundingSphere.radius
-    : 0.2; // fallback
 
-  const proxyGeom = new THREE.SphereGeometry(baseR * radiusMult, 8, 8);
-  const proxyMat = new THREE.MeshBasicMaterial({
+  const proxyGeom = new THREE.SphereGeometry(Math.max(0.25, r * radiusMult), 8, 8);
+  const proxyMat  = new THREE.MeshBasicMaterial({
     transparent: true,
-    opacity: 0,
-    depthWrite: false,
-    depthTest: false
+    opacity: 0.0,
+    depthWrite: false
   });
-  proxyMat.colorWrite = false; // <-- key: truly invisible
 
   const proxy = new THREE.Mesh(proxyGeom, proxyMat);
-  proxy.name = "planetClickProxy";
   proxy.userData.isClickProxy = true;
 
-  // VERY IMPORTANT: make ray hits map to the real planet by id
+  // copy local position so it overlays the planet
+  proxy.position.copy(planetMesh.position);
+
+  // IMPORTANT: raycaster reads objectData off the hit object
   proxy.objectData = planetMesh.objectData;
 
-  // parent it so it follows planet transforms
-  planetMesh.add(proxy);
+  // add beside the planet so it isn't lost if builder nukes children
+  if (planetMesh.parent) planetMesh.parent.add(proxy);
 
   return proxy;
 }
+
 
   
   function getVirtualStarAmpMultiplier() {
@@ -3885,42 +3886,39 @@ if (saveCatalogBtn) {
 
 // === Monkey-patch System.populatePlanets to add invisible click proxies ===
 (function(){
-  if (!window.System || !System.prototype || !System.prototype.populatePlanets) {
-    console.warn("System.populatePlanets not found yet.");
-    return;
-  }
+  if (!window.System?.prototype?.populatePlanets) return;
 
   const _origPopulate = System.prototype.populatePlanets;
 
   System.prototype.populatePlanets = function(){
-    // run the real planet builder first
     _origPopulate.apply(this, arguments);
 
-    if (!this.selectable || !this.selectable.length) return;
+    if (!this.selectable) this.selectable = [];
 
-    const proxiesToAdd = [];
+    const addList = [];
 
     for (const obj of this.selectable) {
-      if (!obj || !obj.objectData) continue;
-
+      if (!obj?.objectData) continue;
       const t = obj.objectData.type;
-      if (t === "STAR" || t === "VIRTUAL_STAR") continue; // only planets/moons/etc
+      if (t === "STAR" || t === "VIRTUAL_STAR") continue;
 
-      // don't double-attach
-      const alreadyHasProxy =
-        (obj.children || []).some(c => c && c.userData && c.userData.isClickProxy);
-      if (alreadyHasProxy) continue;
+      // avoid duplicates
+      const already =
+        this.selectable.some(x => x?.userData?.isClickProxy &&
+          x.objectData?.primaryId === obj.objectData.primaryId);
+      if (already) continue;
 
-      const proxy = attachPlanetClickProxy(obj, 6);
-      if (proxy) proxiesToAdd.push(proxy);
+      const proxy = attachPlanetClickProxy(obj, 8);
+      if (proxy) addList.push(proxy);
     }
 
-    // add proxies AFTER loop so we don't mutate selectable while iterating
-    for (const p of proxiesToAdd) this.selectable.push(p);
+    // add proxies to selectable so raycaster sees them
+    addList.forEach(p => this.selectable.push(p));
   };
 
-  console.log("populatePlanets patched: planet click proxies enabled.");
+  console.log("populatePlanets patched v2: proxies beside planets + recursive raycast ready.");
 })();
+
 
   
 </script>
