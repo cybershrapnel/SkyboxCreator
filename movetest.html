@@ -70,11 +70,10 @@
       <div id="visitedContainer">
         <div id="visitedHeaderRow">
           <div id="visitedHeader">Visited Objects (in render range)</div>
-<div id="visitedFilters">
-  <label><input type="checkbox" id="hideVisitedStars"> hide stars</label>
-  <label><input type="checkbox" id="hideVisitedPlanets"> hide planets</label>
-  <label><input type="checkbox" id="hideVisitedVirtualStars"> hide virtual</label>
-
+          <div id="visitedFilters">
+            <label><input type="checkbox" id="hideVisitedStars"> hide stars</label>
+            <label><input type="checkbox" id="hideVisitedPlanets"> hide planets</label>
+            <label><input type="checkbox" id="hideVisitedVirtualStars"> hide virtual</label>
           </div>
         </div>
         <div id="visitedList">
@@ -162,7 +161,7 @@
         <!-- ✅ Save / Load buttons in the Map section tab -->
         <button id="saveSessionBtn" class="catalog-btn">Save Session</button>
         <!-- ✅ NEW: Save the currently loaded catalog/starmap JSON -->
-<button id="saveCatalogBtn" class="catalog-btn">Save Current Map (Catalog JSON)</button>
+        <button id="saveCatalogBtn" class="catalog-btn">Save Current Map (Catalog JSON)</button>
         <button id="loadSessionBtn" class="catalog-btn">Load Session</button>
         <input id="sessionFileInput" type="file" accept=".json,application/json,text/plain" style="display:none;">
 
@@ -278,10 +277,10 @@
     </div>
   </div>
 
-<div id="attribution-overlay">
-  <span id="page-counter"></span><br />
-  <a href="https://mequavis.com" target="_top">MEQUAVIS.COM</a><br />
-</div>
+  <div id="attribution-overlay">
+    <span id="page-counter"></span><br />
+    <a href="https://mequavis.com" target="_top">MEQUAVIS.COM</a><br />
+  </div>
 
   <canvas id='webgl_canvas'></canvas>
 </div>
@@ -362,10 +361,6 @@
   const virtualStarAmpSlider = document.getElementById("virtualStarAmpSlider");
   const virtualStarAmpValue  = document.getElementById("virtualStarAmpValue");
 
-
-
-
-  
   function getVirtualStarAmpMultiplier() {
     if (!virtualStarAmpSlider) return 1.0;
     const pct = parseFloat(virtualStarAmpSlider.value);
@@ -516,7 +511,7 @@
     $("#selector").accordion({
       collapsible: true,
       animate: 100,
-      heightStyle: 'panel',
+      heightStyle: 'content',
       active: 4
     });
 
@@ -644,7 +639,6 @@
 
   var lastSelectedStarRaw = { x:0, y:0, z:0 };
 
-
   // ✅ Map UUID tracking (comes from catalog JSON)
   let currentMapUUID = null;
 
@@ -665,7 +659,6 @@
       null
     );
   }
-
 
   // ✅ Reset ONLY session state (NOT catalog)
   function resetSessionState(reason){
@@ -699,7 +692,6 @@
     if (reason) console.log("Session reset:", reason);
   }
 
-  
   $("#jump_to_list").keydown(function (e) {
     if (e.keyCode == 13) {
       e.preventDefault();
@@ -1456,51 +1448,49 @@
   }
 
   // ✅ filter helper so nothing out-of-range hits any list
-function isEntryInRenderRange(entry){
-  if (!entry || entry.primaryId == null) return false;
-  const pid = String(entry.primaryId);
+  function isEntryInRenderRange(entry){
+    if (!entry || entry.primaryId == null) return false;
+    const pid = String(entry.primaryId);
 
-// ✅ allow virtual stars using their own objectData
-if (entry.type === "VIRTUAL_STAR") {
-  // grab the currently-alive mesh if it exists
-  const m = resolveMeshByPrimaryId(pid) || entry.meshRef;
-  if (!m || !m.objectData) return false; // if it's not alive, it's not in range
+    // ✅ allow virtual stars using their own objectData
+    if (entry.type === "VIRTUAL_STAR") {
+      // grab the currently-alive mesh if it exists
+      const m = resolveMeshByPrimaryId(pid) || entry.meshRef;
+      if (!m || !m.objectData) return false; // if it's not alive, it's not in range
 
-  const d = m.objectData.solDistance
-    ? m.objectData.solDistance.value.quantity
-    : null;
+      const d = m.objectData.solDistance
+        ? m.objectData.solDistance.value.quantity
+        : null;
 
-  if (d != null && isFinite(d)) return d < renderRadius;
+      if (d != null && isFinite(d)) return d < renderRadius;
 
-  // fallback: compute from raw coords if solDistance missing
-  const c = m.objectData.cartesianCoordsInLys;
-  if (c) {
-    const dist = Math.sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
-    return dist < renderRadius;
-  }
+      // fallback: compute from raw coords if solDistance missing
+      const c = m.objectData.cartesianCoordsInLys;
+      if (c) {
+        const dist = Math.sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
+        return dist < renderRadius;
+      }
 
-  return true; // if we can't tell, don't hide it
-}
+      return true; // if we can't tell, don't hide it
+    }
 
+    // stars: use solDistance from catalog
+    if (entry.isStar) {
+      const sdata = findStarDataByPrimaryId(pid);
+      if (!sdata || !sdata.solDistance) return false;
+      return (sdata.solDistance.value.quantity < renderRadius);
+    }
 
-  // stars: use solDistance from catalog
-  if (entry.isStar) {
-    const sdata = findStarDataByPrimaryId(pid);
+    // planets: only show if their parent star is render-visible
+    const pdata = findPlanetDataByPrimaryId(pid);
+    const starId = (pdata && pdata.starId != null) ? String(pdata.starId)
+               : (entry.starId != null ? String(entry.starId) : null);
+    if (!starId) return false;
+
+    const sdata = findStarDataByPrimaryId(starId);
     if (!sdata || !sdata.solDistance) return false;
     return (sdata.solDistance.value.quantity < renderRadius);
   }
-
-  // planets: only show if their parent star is render-visible
-  const pdata = findPlanetDataByPrimaryId(pid);
-  const starId = (pdata && pdata.starId != null) ? String(pdata.starId)
-               : (entry.starId != null ? String(entry.starId) : null);
-  if (!starId) return false;
-
-  const sdata = findStarDataByPrimaryId(starId);
-  if (!sdata || !sdata.solDistance) return false;
-  return (sdata.solDistance.value.quantity < renderRadius);
-}
-
 
   function computeLegLy(prevMesh, newMesh){
     if (!prevMesh || !newMesh) return 0;
@@ -1513,68 +1503,66 @@ if (entry.type === "VIRTUAL_STAR") {
     return isFinite(d) ? d : 0;
   }
 
-function addVisitedEntry(mesh, legLy){
-  if (!mesh || !mesh.objectData) return;
+  function addVisitedEntry(mesh, legLy){
+    if (!mesh || !mesh.objectData) return;
 
-  const data = mesh.objectData;
-  const pid = String(data.primaryId);
+    const data = mesh.objectData;
+    const pid = String(data.primaryId);
 
-  // ✅ INCLUDE virtual stars as stars
-  const isStarType = (data.type === "STAR" || data.type === "VIRTUAL_STAR");
+    // ✅ INCLUDE virtual stars as stars
+    const isStarType = (data.type === "STAR" || data.type === "VIRTUAL_STAR");
 
-  if (!visitedById[pid]) {
-    visitedById[pid] = {
-      primaryId: pid,
-      type: data.type || "OBJECT",
-      isStar: isStarType,
-      name: getDisplayNameFromData(data),
-      meshRef: mesh,
-      legLy: legLy || 0
-    };
-    visitedLog.push(visitedById[pid]);
-  } else {
-    visitedById[pid].name = getDisplayNameFromData(data);
-    visitedById[pid].meshRef = mesh;
-    visitedById[pid].legLy = legLy || visitedById[pid].legLy;
-    visitedById[pid].isStar = isStarType;
-    visitedById[pid].type = data.type || visitedById[pid].type;
+    if (!visitedById[pid]) {
+      visitedById[pid] = {
+        primaryId: pid,
+        type: data.type || "OBJECT",
+        isStar: isStarType,
+        name: getDisplayNameFromData(data),
+        meshRef: mesh,
+        legLy: legLy || 0
+      };
+      visitedLog.push(visitedById[pid]);
+    } else {
+      visitedById[pid].name = getDisplayNameFromData(data);
+      visitedById[pid].meshRef = mesh;
+      visitedById[pid].legLy = legLy || visitedById[pid].legLy;
+      visitedById[pid].isStar = isStarType;
+      visitedById[pid].type = data.type || visitedById[pid].type;
+    }
+
+    renderVisitedList();
   }
 
-  renderVisitedList();
-}
+  const hideVirtualStarsEl = document.getElementById("hideVisitedVirtualStars");
 
+  function renderVisitedList(){
+    if (!visitedListEl) return;
 
-const hideVirtualStarsEl = document.getElementById("hideVisitedVirtualStars");
+    const hideStars   = !!(hideVisitedStarsEl && hideVisitedStarsEl.checked);
+    const hidePlanets = !!(hideVisitedPlanetsEl && hideVisitedPlanetsEl.checked);
+    const hideVirtual = !!(hideVirtualStarsEl && hideVirtualStarsEl.checked);
 
-function renderVisitedList(){
-  if (!visitedListEl) return;
+    visitedListEl.innerHTML = "";
 
-  const hideStars   = !!(hideVisitedStarsEl && hideVisitedStarsEl.checked);
-  const hidePlanets = !!(hideVisitedPlanetsEl && hideVisitedPlanetsEl.checked);
-  const hideVirtual = !!(hideVirtualStarsEl && hideVirtualStarsEl.checked);
+    const filtered = visitedLog.filter(e => {
+      // ✅ don’t show anything outside render radius (safe for stars AND planets)
+      if (!isEntryInRenderRange(e)) return false;
 
-  visitedListEl.innerHTML = "";
+      // ✅ virtual stars: only show if they currently exist
+      if (e.type === "VIRTUAL_STAR") {
+        const live = resolveMeshByPrimaryId(e.primaryId);
+        if (!live) return false;           // hide if not spawned right now
+        e.meshRef = live;                  // refresh reference
+        e.name = getDisplayNameFromData(live.objectData); // refresh name if needed
+      }
 
-const filtered = visitedLog.filter(e => {
-  // ✅ don’t show anything outside render radius (safe for stars AND planets)
-  if (!isEntryInRenderRange(e)) return false;
+      if (e.isStar && hideStars) return false;
+      if (!e.isStar && hidePlanets) return false;
 
-  // ✅ virtual stars: only show if they currently exist
-  if (e.type === "VIRTUAL_STAR") {
-    const live = resolveMeshByPrimaryId(e.primaryId);
-    if (!live) return false;           // hide if not spawned right now
-    e.meshRef = live;                  // refresh reference
-    e.name = getDisplayNameFromData(live.objectData); // refresh name if needed
-  }
+      if (e.type === "VIRTUAL_STAR" && hideVirtual) return false;
 
-  if (e.isStar && hideStars) return false;
-  if (!e.isStar && hidePlanets) return false;
-
-  if (e.type === "VIRTUAL_STAR" && hideVirtual) return false;
-
-  return true;
-});
-
+      return true;
+    });
 
     if (!filtered.length) {
       visitedListEl.innerHTML = '<div class="visited-empty">No visits yet…</div>';
@@ -1934,40 +1922,38 @@ const filtered = visitedLog.filter(e => {
         }
       });
 
-if (data.starId != null) {
-  const sdata = findStarDataByPrimaryId(String(data.starId));
-  if (sdata) {
-    const sid = String(sdata.primaryId);
-    const sname = getDisplayNameFromData(sdata);
+      if (data.starId != null) {
+        const sdata = findStarDataByPrimaryId(String(data.starId));
+        if (sdata) {
+          const sid = String(sdata.primaryId);
+          const sname = getDisplayNameFromData(sdata);
 
-    html += `
-      <div class="vd-section">
-        <div class="vd-label">Parent Star</div>
-        <div>
-          <button class="vd-parent-star-btn" data-star-id="${sid}">
-            ◄ ${sname}
-          </button>
-        </div>
-      </div>
-    `;
-  }
-}
-
+          html += `
+            <div class="vd-section">
+              <div class="vd-label">Parent Star</div>
+              <div>
+                <button class="vd-parent-star-btn" data-star-id="${sid}">
+                  ◄ ${sname}
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
     }
 
     visitDetailsContentEl.innerHTML = html;
 
     // ✅ Parent star "back" button
-const parentBtn = visitDetailsContentEl.querySelector(".vd-parent-star-btn");
-if (parentBtn) {
-  parentBtn.addEventListener("click", function(ev){
-    ev.stopPropagation();
-    const sid = parentBtn.dataset.starId;
-    if (sid) openVisitDetails(sid);   // swaps popup to star info
-  });
-}
+    const parentBtn = visitDetailsContentEl.querySelector(".vd-parent-star-btn");
+    if (parentBtn) {
+      parentBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        const sid = parentBtn.dataset.starId;
+        if (sid) openVisitDetails(sid);   // swaps popup to star info
+      });
+    }
 
-    
     if (isStarType) {
       const rows = visitDetailsContentEl.querySelectorAll(".vd-planet-row[data-planet-id]");
       rows.forEach(r => {
@@ -2407,11 +2393,11 @@ if (parentBtn) {
 
   const STARMAP_INDEX_URL = "https://xtdevelopment.net/chat-proxy/starmaps/starmaps.php";
   // ✅ remember last loaded catalog for saving
-let lastCatalogURL = DEFAULT_CATALOG_URL;
-let lastCatalogLabel = "server_catalog";
+  let lastCatalogURL = DEFAULT_CATALOG_URL;
+  let lastCatalogLabel = "server_catalog";
   // ✅ cache the exact catalog file text we got from server/local
-let lastCatalogRawText = null;
-let lastCatalogRawURL  = null;
+  let lastCatalogRawText = null;
+  let lastCatalogRawURL  = null;
 
   let mapAlive = false;
 
@@ -2535,20 +2521,19 @@ let lastCatalogRawURL  = null;
     updateThroneworldDisplay();
   }
 
-
   function cacheBust(url) {
     const ts = Date.now();
     return url + (url.indexOf("?") === -1 ? "?" : "&") + "ts=" + ts;
   }
 
   function loadCatalogFromURL(url, isCustom) {
-      // ✅ track last loaded catalog
-  lastCatalogURL = url;
-  try {
-    lastCatalogLabel = (url.split("/").pop() || "catalog").replace(/\?.*$/,"");
-  } catch(e) {
-    lastCatalogLabel = "catalog";
-  }
+    // ✅ track last loaded catalog
+    lastCatalogURL = url;
+    try {
+      lastCatalogLabel = (url.split("/").pop() || "catalog").replace(/\?.*$/,"");
+    } catch(e) {
+      lastCatalogLabel = "catalog";
+    }
     if (catalogStatusEl) {
       catalogStatusEl.style.color = "#ffb";
       catalogStatusEl.textContent = "Loading catalog...";
@@ -2561,9 +2546,9 @@ let lastCatalogRawURL  = null;
       url: cacheBust(url),
       success: function (data) {
         try {
-              // ✅ store EXACT raw text from server (unchanged)
-    lastCatalogRawText = data;
-    lastCatalogRawURL  = url;
+          // ✅ store EXACT raw text from server (unchanged)
+          lastCatalogRawText = data;
+          lastCatalogRawURL  = url;
           var obj = JSON.parse(data);
 
           if (isCustom) obj = renameSolIfCustom(obj);
@@ -2601,17 +2586,17 @@ let lastCatalogRawURL  = null;
       var file = ev.target.files && ev.target.files[0];
       if (!file) return;
 
-        // ✅ track last loaded catalog (local file)
-  lastCatalogURL = null;
-  lastCatalogLabel = file.name || "local_catalog";
+      // ✅ track last loaded catalog (local file)
+      lastCatalogURL = null;
+      lastCatalogLabel = file.name || "local_catalog";
 
       var reader = new FileReader();
       reader.onload = function() {
         try {
           var raw = reader.result;
-              // ✅ store EXACT raw text from local file too
-    lastCatalogRawText = raw;
-    lastCatalogRawURL  = "local-file";
+          // ✅ store EXACT raw text from local file too
+          lastCatalogRawText = raw;
+          lastCatalogRawURL  = "local-file";
 
           var obj = JSON.parse(raw);
           obj = renameSolIfCustom(obj);
@@ -3027,34 +3012,29 @@ let lastCatalogRawURL  = null;
 
   let pendingLoadedState = null;
 
-const saveCatalogBtn = document.getElementById("saveCatalogBtn");
+  const saveCatalogBtn = document.getElementById("saveCatalogBtn");
 
-function buildCurrentCatalogObject(){
-  return {
-    stars: starData || [],
-    planets: planetData || []
-  };
-}
-
-function saveCurrentCatalog(){
-  if (!starData || !starData.length) {
-    console.warn("No catalog loaded to save.");
-    return;
+  function buildCurrentCatalogObject(){
+    return {
+      stars: starData || [],
+      planets: planetData || []
+    };
   }
 
-  const obj = buildCurrentCatalogObject();
-  const ts = new Date().toISOString().replace(/[:.]/g,"-");
-  const base = (lastCatalogLabel || "catalog").replace(/\.json$/i,"").replace(/\.txt$/i,"");
-  const fname = base + "_saved_" + ts + ".json";
+  function saveCurrentCatalog(){
+    if (!starData || !starData.length) {
+      console.warn("No catalog loaded to save.");
+      return;
+    }
 
-  downloadJSON(obj, fname);
-}
+    const obj = buildCurrentCatalogObject();
+    const ts = new Date().toISOString().replace(/[:.]/g,"-");
+    const base = (lastCatalogLabel || "catalog").replace(/\.json$/i,"").replace(/\.txt$/i,"");
+    const fname = base + "_saved_" + ts + ".json";
 
-//if (saveCatalogBtn) {
-//  saveCatalogBtn.addEventListener("click", saveCurrentCatalog);
-//}
+    downloadJSON(obj, fname);
+  }
 
-  
   function buildSaveObject(){
     const nowISO = new Date().toISOString();
     const totalSessionMs = getTotalSessionMsSoFar();
@@ -3084,33 +3064,29 @@ function saveCurrentCatalog(){
       starId: h.starId || null
     }));
 
-const mapUUIDToSave = currentMapUUID || null;
+    const mapUUIDToSave = currentMapUUID || null;
 
-// ✅ warn if map UUID missing
-if (!mapUUIDToSave) {
-  console.warn("Saving session with NULL map UUID. This session will not be loadable.");
-  // optional user-facing warning:
-  alert("Warning: current map has no UUID. Session will save, but cannot be loaded later.");
-}
+    // ✅ warn if map UUID missing
+    if (!mapUUIDToSave) {
+      console.warn("Saving session with NULL map UUID. This session will not be loadable.");
+      // optional user-facing warning:
+      alert("Warning: current map has no UUID. Session will save, but cannot be loaded later.");
+    }
 
-return {
-  version: 2,
-  uuid: mapUUIDToSave,
-  saveTimeISO: nowISO,
-  sessionStartISO: sessionStartISO,
-  totalSessionMs: totalSessionMs,
-  totalTravelDistanceLy: totalTravelDistanceLy,
-  avgLyPerHour: avgLyPerHour,
-  renames: renamedById,
-  visited,
-  colonies,
-  homeworlds,
-  lastSelectedPrimaryId: currentObjectPrimaryId || null
-};
-
-
-
-
+    return {
+      version: 2,
+      uuid: mapUUIDToSave,
+      saveTimeISO: nowISO,
+      sessionStartISO: sessionStartISO,
+      totalSessionMs: totalSessionMs,
+      totalTravelDistanceLy: totalTravelDistanceLy,
+      avgLyPerHour: avgLyPerHour,
+      renames: renamedById,
+      visited,
+      colonies,
+      homeworlds,
+      lastSelectedPrimaryId: currentObjectPrimaryId || null
+    };
   }
 
   function downloadJSON(obj, filename){
@@ -3132,185 +3108,179 @@ return {
     downloadJSON(obj, fname);
   }
 
-
-
-function downloadRawText(text, filename){
-  const blob = new Blob([text], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function saveCurrentCatalogRaw(){
-  if (!lastCatalogRawText) {
-    console.warn("No raw catalog cached yet.");
-    return;
+  function downloadRawText(text, filename){
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
-  const ts = new Date().toISOString().replace(/[:.]/g,"-");
-  let base = "catalog";
+  function saveCurrentCatalogRaw(){
+    if (!lastCatalogRawText) {
+      console.warn("No raw catalog cached yet.");
+      return;
+    }
 
-  if (lastCatalogRawURL && typeof lastCatalogRawURL === "string") {
-    try {
-      base = (lastCatalogRawURL.split("/").pop() || "catalog").replace(/\?.*$/,"");
-      base = base.replace(/\.json$/i,"").replace(/\.txt$/i,"");
-    } catch(e){}
+    const ts = new Date().toISOString().replace(/[:.]/g,"-");
+    let base = "catalog";
+
+    if (lastCatalogRawURL && typeof lastCatalogRawURL === "string") {
+      try {
+        base = (lastCatalogRawURL.split("/").pop() || "catalog").replace(/\?.*$/,"");
+        base = base.replace(/\.json$/i,"").replace(/\.txt$/i,"");
+      } catch(e){}
+    }
+
+    const fname = base + "_RAW_" + ts + ".json";
+    downloadRawText(lastCatalogRawText, fname);
   }
 
-  const fname = base + "_RAW_" + ts + ".json";
-  downloadRawText(lastCatalogRawText, fname);
-}
-
-if (saveCatalogBtn) {
-  saveCatalogBtn.addEventListener("click", saveCurrentCatalogRaw);
-}
-
-  
-function applyLoadedStateNow(state){
-  if (!state || typeof state !== "object") return;
-
-  var stateUUID =
-    (state.__meq_appendix && state.__meq_appendix.uuid) ||
-    state.mapUUID ||
-    state.uuid ||
-    state.catalogUUID ||
-    (state.meta && (state.meta.uuid || state.meta.mapUUID)) ||
-    null;
-
-  console.log("[MEQ] Session load attempt:");
-  console.log("      currentMapUUID =", currentMapUUID);
-  console.log("      sessionUUID    =", stateUUID);
-
-  // 🔒 RULE 1: map has NO UUID, session HAS UUID -> ABORT
-  if (!currentMapUUID && stateUUID) {
-    console.warn(
-      "[MEQ] ABORT: Map has NO UUID, but session has UUID:", stateUUID
-    );
-    alert(
-      "This session is bound to map UUID:\n" +
-      stateUUID +
-      "\n\nCurrent map has no UUID. Load aborted."
-    );
-    return;
+  if (saveCatalogBtn) {
+    saveCatalogBtn.addEventListener("click", saveCurrentCatalogRaw);
   }
 
-  // 🔒 RULE 2: map HAS UUID, session has NO UUID -> ABORT
-  if (currentMapUUID && !stateUUID) {
-    console.warn(
-      "[MEQ] ABORT: Map has UUID (" + currentMapUUID + ") but session has NO UUID."
-    );
-    alert("Session file has no map UUID. Load aborted.");
-    return;
-  }
+  function applyLoadedStateNow(state){
+    if (!state || typeof state !== "object") return;
 
-  // 🔒 RULE 3: both have UUID but they DON'T match -> ABORT
-  if (currentMapUUID && stateUUID &&
-      String(stateUUID) !== String(currentMapUUID)) {
-    console.warn(
-      "[MEQ] ABORT: Map/session UUID mismatch. session =",
-      stateUUID, " map =", currentMapUUID
-    );
-    alert(
-      "That session belongs to a different map.\n\n" +
-      "Session UUID: " + stateUUID + "\n" +
-      "Current Map UUID: " + currentMapUUID + "\n\n" +
-      "Load aborted."
-    );
-    return;
-  }
+    var stateUUID =
+      (state.__meq_appendix && state.__meq_appendix.uuid) ||
+      state.mapUUID ||
+      state.uuid ||
+      state.catalogUUID ||
+      (state.meta && (state.meta.uuid || state.meta.mapUUID)) ||
+      null;
 
-  console.log("[MEQ] UUID check passed; applying session state…");
+    console.log("[MEQ] Session load attempt:");
+    console.log("      currentMapUUID =", currentMapUUID);
+    console.log("      sessionUUID    =", stateUUID);
 
-  // ✅ FROM HERE DOWN: keep your existing logic
-  // (resetSessionState, restoring renames, visited, colonies, homeworlds, etc.)
+    // 🔒 RULE 1: map has NO UUID, session HAS UUID -> ABORT
+    if (!currentMapUUID && stateUUID) {
+      console.warn(
+        "[MEQ] ABORT: Map has NO UUID, but session has UUID:", stateUUID
+      );
+      alert(
+        "This session is bound to map UUID:\n" +
+        stateUUID +
+        "\n\nCurrent map has no UUID. Load aborted."
+      );
+      return;
+    }
 
-  resetSessionState("session-load");
+    // 🔒 RULE 2: map HAS UUID, session has NO UUID -> ABORT
+    if (currentMapUUID && !stateUUID) {
+      console.warn(
+        "[MEQ] ABORT: Map has UUID (" + currentMapUUID + ") but session has NO UUID."
+      );
+      alert("Session file has no map UUID. Load aborted.");
+      return;
+    }
 
-  totalSessionMsAccum = Math.max(0, Number(state.totalSessionMs) || 0);
-  sessionStartWallMs = Date.now();
+    // 🔒 RULE 3: both have UUID but they DON'T match -> ABORT
+    if (currentMapUUID && stateUUID &&
+        String(stateUUID) !== String(currentMapUUID)) {
+      console.warn(
+        "[MEQ] ABORT: Map/session UUID mismatch. session =",
+        stateUUID, " map =", currentMapUUID
+      );
+      alert(
+        "That session belongs to a different map.\n\n" +
+        "Session UUID: " + stateUUID + "\n" +
+        "Current Map UUID: " + currentMapUUID + "\n\n" +
+        "Load aborted."
+      );
+      return;
+    }
 
-  totalTravelDistanceLy = Number(state.totalTravelDistanceLy) || 0;
+    console.log("[MEQ] UUID check passed; applying session state…");
 
-  renamedById = state.renames && typeof state.renames === "object" ? state.renames : {};
-  for (var pid in renamedById) {
-    if (renamedById.hasOwnProperty(pid)) {
-      applyRenameToData(pid, renamedById[pid]);
+    // ✅ FROM HERE DOWN: keep your existing logic
+    // (resetSessionState, restoring renames, visited, colonies, homeworlds, etc.)
+
+    resetSessionState("session-load");
+
+    totalSessionMsAccum = Math.max(0, Number(state.totalSessionMs) || 0);
+    sessionStartWallMs = Date.now();
+
+    totalTravelDistanceLy = Number(state.totalTravelDistanceLy) || 0;
+
+    renamedById = state.renames && typeof state.renames === "object" ? state.renames : {};
+    for (var pid in renamedById) {
+      if (renamedById.hasOwnProperty(pid)) {
+        applyRenameToData(pid, renamedById[pid]);
+      }
+    }
+
+    visitedLog = [];
+    visitedById = {};
+    if (Object.prototype.toString.call(state.visited) === "[object Array]") {
+      state.visited.forEach(function(v){
+        if (!v || v.primaryId == null) return;
+        var vpid = String(v.primaryId);
+        visitedById[vpid] = {
+          primaryId: vpid,
+          type: v.type || "OBJECT",
+          isStar: !!v.isStar,
+          name: v.name || ("Object " + vpid),
+          meshRef: resolveMeshByPrimaryId(vpid),
+          legLy: Number(v.legLy) || 0,
+          starId: v.starId || null
+        };
+        visitedLog.push(visitedById[vpid]);
+      });
+    }
+    renderVisitedList();
+
+    colonyLog = [];
+    colonyById = {};
+    if (Object.prototype.toString.call(state.colonies) === "[object Array]") {
+      state.colonies.forEach(function(c){
+        if (!c || c.primaryId == null) return;
+        var cpid = String(c.primaryId);
+        colonyById[cpid] = {
+          primaryId: cpid,
+          type: c.type || "PLANET",
+          name: c.name || ("Colony " + cpid),
+          meshRef: resolveMeshByPrimaryId(cpid),
+          starId: c.starId || null
+        };
+        colonyLog.push(colonyById[cpid]);
+      });
+    }
+    renderColonyList();
+
+    homeworldLog = [];
+    homeworldById = {};
+    if (Object.prototype.toString.call(state.homeworlds) === "[object Array]") {
+      state.homeworlds.forEach(function(h){
+        if (!h || h.primaryId == null) return;
+        var hpid = String(h.primaryId);
+        homeworldById[hpid] = {
+          primaryId: hpid,
+          type: h.type || "PLANET",
+          name: h.name || ("Homeworld " + hpid),
+          meshRef: resolveMeshByPrimaryId(hpid),
+          starId: h.starId || null
+        };
+        homeworldLog.push(homeworldById[hpid]);
+      });
+    }
+    renderHomeworldList();
+
+    updateobjectData();
+    updateCatalogStats();
+    updateNearestStarsList(currentObjectMesh);
+    updateThroneworldDisplay();
+
+    if (state.lastSelectedPrimaryId != null) {
+      travelToPrimaryId(String(state.lastSelectedPrimaryId));
     }
   }
-
-  visitedLog = [];
-  visitedById = {};
-  if (Object.prototype.toString.call(state.visited) === "[object Array]") {
-    state.visited.forEach(function(v){
-      if (!v || v.primaryId == null) return;
-      var vpid = String(v.primaryId);
-      visitedById[vpid] = {
-        primaryId: vpid,
-        type: v.type || "OBJECT",
-        isStar: !!v.isStar,
-        name: v.name || ("Object " + vpid),
-        meshRef: resolveMeshByPrimaryId(vpid),
-        legLy: Number(v.legLy) || 0,
-        starId: v.starId || null
-      };
-      visitedLog.push(visitedById[vpid]);
-    });
-  }
-  renderVisitedList();
-
-  colonyLog = [];
-  colonyById = {};
-  if (Object.prototype.toString.call(state.colonies) === "[object Array]") {
-    state.colonies.forEach(function(c){
-      if (!c || c.primaryId == null) return;
-      var cpid = String(c.primaryId);
-      colonyById[cpid] = {
-        primaryId: cpid,
-        type: c.type || "PLANET",
-        name: c.name || ("Colony " + cpid),
-        meshRef: resolveMeshByPrimaryId(cpid),
-        starId: c.starId || null
-      };
-      colonyLog.push(colonyById[cpid]);
-    });
-  }
-  renderColonyList();
-
-  homeworldLog = [];
-  homeworldById = {};
-  if (Object.prototype.toString.call(state.homeworlds) === "[object Array]") {
-    state.homeworlds.forEach(function(h){
-      if (!h || h.primaryId == null) return;
-      var hpid = String(h.primaryId);
-      homeworldById[hpid] = {
-        primaryId: hpid,
-        type: h.type || "PLANET",
-        name: h.name || ("Homeworld " + hpid),
-        meshRef: resolveMeshByPrimaryId(hpid),
-        starId: h.starId || null
-      };
-      homeworldLog.push(homeworldById[hpid]);
-    });
-  }
-  renderHomeworldList();
-
-  updateobjectData();
-  updateCatalogStats();
-  updateNearestStarsList(currentObjectMesh);
-  updateThroneworldDisplay();
-
-  if (state.lastSelectedPrimaryId != null) {
-    travelToPrimaryId(String(state.lastSelectedPrimaryId));
-  }
-}
-
-
-
 
   function loadSessionFile(file){
     const reader = new FileReader();
