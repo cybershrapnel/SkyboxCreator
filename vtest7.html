@@ -296,23 +296,23 @@
       border-top: 1px solid rgba(255,255,255,0.15);
       font-size: 12px;
     }
-#visitedHeaderRow{
-  display:flex;
-  flex-direction:column;   /* <-- puts filters under title */
-  align-items:flex-start;
-  gap:2px;
-  margin-bottom:4px;
-}
+    #visitedHeaderRow{
+      display:flex;
+      flex-direction:column;   /* <-- puts filters under title */
+      align-items:flex-start;
+      gap:2px;
+      margin-bottom:4px;
+    }
 
-#visitedFilters{
-  width:100%;
-  justify-content:flex-start;
-  gap:10px;
-  font-size:11px;
-  color:#bbb;
-  white-space:normal;      /* allow wrap if needed */
-  flex-wrap:wrap;
-}
+    #visitedFilters{
+      width:100%;
+      justify-content:flex-start;
+      gap:10px;
+      font-size:11px;
+      color:#bbb;
+      white-space:normal;      /* allow wrap if needed */
+      flex-wrap:wrap;
+    }
 
     #visitedHeader {
       font-weight: bold;
@@ -659,18 +659,17 @@
       color:#ffd28a;
     }
     .vd-parent-star-btn{
-  font-size:12px;
-  padding:3px 8px;
-  cursor:pointer;
-  background: rgba(120,200,255,0.12);
-  border: 1px solid rgba(120,200,255,0.45);
-  color:#cfe3ff;
-  border-radius:4px;
-}
-.vd-parent-star-btn:hover{
-  background: rgba(120,200,255,0.25);
-}
-
+      font-size:12px;
+      padding:3px 8px;
+      cursor:pointer;
+      background: rgba(120,200,255,0.12);
+      border: 1px solid rgba(120,200,255,0.45);
+      color:#cfe3ff;
+      border-radius:4px;
+    }
+    .vd-parent-star-btn:hover{
+      background: rgba(120,200,255,0.25);
+    }
   </style>
 </head>
 
@@ -715,11 +714,10 @@
       <div id="visitedContainer">
         <div id="visitedHeaderRow">
           <div id="visitedHeader">Visited Objects (in render range)</div>
-<div id="visitedFilters">
-  <label><input type="checkbox" id="hideVisitedStars"> hide stars</label>
-  <label><input type="checkbox" id="hideVisitedPlanets"> hide planets</label>
-  <label><input type="checkbox" id="hideVisitedVirtualStars"> hide virtual</label>
-
+          <div id="visitedFilters">
+            <label><input type="checkbox" id="hideVisitedStars"> hide stars</label>
+            <label><input type="checkbox" id="hideVisitedPlanets"> hide planets</label>
+            <label><input type="checkbox" id="hideVisitedVirtualStars"> hide virtual</label>
           </div>
         </div>
         <div id="visitedList">
@@ -807,7 +805,7 @@
         <!-- ✅ Save / Load buttons in the Map section tab -->
         <button id="saveSessionBtn" class="catalog-btn">Save Session</button>
         <!-- ✅ NEW: Save the currently loaded catalog/starmap JSON -->
-<button id="saveCatalogBtn" class="catalog-btn">Save Current Map (Catalog JSON)</button>
+        <button id="saveCatalogBtn" class="catalog-btn">Save Current Map (Catalog JSON)</button>
         <button id="loadSessionBtn" class="catalog-btn">Load Session</button>
         <input id="sessionFileInput" type="file" accept=".json,application/json,text/plain" style="display:none;">
 
@@ -1007,41 +1005,6 @@
   const virtualStarAmpSlider = document.getElementById("virtualStarAmpSlider");
   const virtualStarAmpValue  = document.getElementById("virtualStarAmpValue");
 
-function attachPlanetClickProxy(planetMesh, radiusMult=8){
-  if (!planetMesh) return null;
-
-  // try geometry size first
-  let r = 0.2;
-  if (planetMesh.geometry && planetMesh.geometry.boundingSphere) {
-    r = planetMesh.geometry.boundingSphere.radius;
-  } else if (planetMesh.objectData?.radius?.value?.quantity) {
-    r = planetMesh.objectData.radius.value.quantity * 3000000; // rough scale match
-  }
-
-  const proxyGeom = new THREE.SphereGeometry(Math.max(0.25, r * radiusMult), 8, 8);
-  const proxyMat  = new THREE.MeshBasicMaterial({
-    transparent: true,
-    opacity: 0.0,
-    depthWrite: false
-  });
-
-  const proxy = new THREE.Mesh(proxyGeom, proxyMat);
-  proxy.userData.isClickProxy = true;
-
-  // copy local position so it overlays the planet
-  proxy.position.copy(planetMesh.position);
-
-  // IMPORTANT: raycaster reads objectData off the hit object
-  proxy.objectData = planetMesh.objectData;
-
-  // add beside the planet so it isn't lost if builder nukes children
-  if (planetMesh.parent) planetMesh.parent.add(proxy);
-
-  return proxy;
-}
-
-
-  
   function getVirtualStarAmpMultiplier() {
     if (!virtualStarAmpSlider) return 1.0;
     const pct = parseFloat(virtualStarAmpSlider.value);
@@ -1281,6 +1244,10 @@ function attachPlanetClickProxy(planetMesh, radiusMult=8){
   var raycaster = new THREE.Raycaster();
   var mouse = new THREE.Vector2();
 
+  // ✅ make raycaster friendlier to tiny sprites/points (helps planets)
+  raycaster.params.Points = { threshold: 0.8 };
+  raycaster.params.Sprite = { threshold: 0.8 };
+
   var freeLookControls = new THREE.FreeLookControls(camera, canvas);
   var orbitControls = new THREE.OrbitControls(camera, canvas);
   var tweenControls = new THREE.TweenControls(camera);
@@ -1387,18 +1354,23 @@ function attachPlanetClickProxy(planetMesh, radiusMult=8){
     return BASE_PICK_PX + extra;
   }
 
+  // ✅ IMPORTANT FIX: project WORLD position so nested planets can be picked
   function pickByScreenDistance(objects, sx, sy, pickPx) {
     let best = null;
     let bestD = Infinity;
 
+    const wp = new THREE.Vector3();
+
     for (const s of objects) {
-      if (!s || !s.position || !s.objectData) continue;
+      if (!s || !s.objectData || !s.getWorldPosition) continue;
 
       const id = s.objectData.primaryId;
       if (id === currentObjectPrimaryId) continue;
       if (currentSystem && currentSystem.star && id === currentSystem.star.objectData.primaryId) continue;
 
-      const p = s.position.clone().project(camera);
+      s.getWorldPosition(wp);
+      const p = wp.clone().project(camera);  // use projected world coords
+
       if (p.z < -1 || p.z > 1) continue;
 
       const px = (p.x * 0.5 + 0.5) * window.innerWidth;
@@ -1603,6 +1575,7 @@ function attachPlanetClickProxy(planetMesh, radiusMult=8){
     updateThroneworldDisplay();
   }
 
+  // ✅ IMPORTANT FIX: use world position for nested objects in this heuristic
   function closestNonPrimaryObject(intersects, currentPrimary, currentStarPrimary) {
     if (intersects.length == 0) return null;
 
@@ -1618,8 +1591,15 @@ function attachPlanetClickProxy(planetMesh, radiusMult=8){
     var min = Number.MAX_VALUE;
     var best = null;
 
+    const wp = new THREE.Vector3();
+
     intersects.forEach(function (e) {
-      var screenDistance = e.object.position.distanceTo(e.point) / lookPoint.distanceTo(e.point);
+      if (e.object && e.object.getWorldPosition) {
+        e.object.getWorldPosition(wp);
+      } else {
+        wp.copy(e.object.position);
+      }
+      var screenDistance = wp.distanceTo(e.point) / lookPoint.distanceTo(e.point);
       var intersectId = e.object.objectData.primaryId;
 
       if (screenDistance < min && intersectId != currentPrimary && intersectId != currentStarPrimary) {
@@ -1631,6 +1611,7 @@ function attachPlanetClickProxy(planetMesh, radiusMult=8){
     return best;
   }
 
+  // ✅ MAIN FIX: raycast whole currentSystem.object recursively, not selectable[]
   function getStarForPoint(x, y) {
     if (x && y) {
       mouse.x = (x / window.innerWidth) * 2 - 1;
@@ -1640,22 +1621,36 @@ function attachPlanetClickProxy(planetMesh, radiusMult=8){
       intersectCamera.rotation.copy(camera.rotation);
       raycaster.setFromCamera(mouse, intersectCamera);
 
-      if (currentSystem) {
-        var last = closestNonPrimaryObject(
-          raycaster.intersectObjects(currentSystem.selectable, true),
+      if (currentSystem && currentSystem.object) {
+        // ensure world matrices are updated for nested planets
+        currentSystem.object.updateMatrixWorld(true);
+
+        const hits = raycaster.intersectObject(currentSystem.object, true);
+        const picked = closestNonPrimaryObject(
+          hits,
           currentObjectPrimaryId,
-          currentSystem.star.objectData.primaryId
+          currentSystem.star?.objectData?.primaryId
         );
-        if (last) return currentSystem.objectsByID[last.objectData.primaryId];
+
+        if (picked) {
+          // return canonical version if system tracks it
+          if (currentSystem.objectsByID && picked.objectData?.primaryId != null) {
+            return currentSystem.objectsByID[String(picked.objectData.primaryId)] || picked;
+          }
+          return picked;
+        }
       }
 
-      // ✅ planet screen-distance fallback (fix click-through planets)
-      if (currentSystem && currentSystem.selectable) {
-        const maybePlanets = currentSystem.selectable.filter(o =>
-          o && o.objectData &&
-          o.objectData.type !== "STAR" &&
-          o.objectData.type !== "VIRTUAL_STAR"
-        );
+      // ✅ planet screen-distance fallback (now scans system object tree)
+      if (currentSystem && currentSystem.object) {
+        const maybePlanets = [];
+        currentSystem.object.traverse(function(o){
+          if (!o || !o.objectData) return;
+          if (o.objectData.type !== "STAR" && o.objectData.type !== "VIRTUAL_STAR") {
+            maybePlanets.push(o);
+          }
+        });
+
         if (maybePlanets.length) {
           const pickPx = Math.max(8, currentPickPx() * 1.1);
           const pb = pickByScreenDistance(maybePlanets, x, y, pickPx);
@@ -2076,51 +2071,45 @@ function attachPlanetClickProxy(planetMesh, radiusMult=8){
   }
 
   // ✅ filter helper so nothing out-of-range hits any list
-function isEntryInRenderRange(entry){
-  if (!entry || entry.primaryId == null) return false;
-  const pid = String(entry.primaryId);
+  function isEntryInRenderRange(entry){
+    if (!entry || entry.primaryId == null) return false;
+    const pid = String(entry.primaryId);
 
-// ✅ allow virtual stars using their own objectData
-if (entry.type === "VIRTUAL_STAR") {
-  // grab the currently-alive mesh if it exists
-  const m = resolveMeshByPrimaryId(pid) || entry.meshRef;
-  if (!m || !m.objectData) return false; // if it's not alive, it's not in range
+    // ✅ allow virtual stars using their own objectData
+    if (entry.type === "VIRTUAL_STAR") {
+      const m = resolveMeshByPrimaryId(pid) || entry.meshRef;
+      if (!m || !m.objectData) return false;
 
-  const d = m.objectData.solDistance
-    ? m.objectData.solDistance.value.quantity
-    : null;
+      const d = m.objectData.solDistance
+        ? m.objectData.solDistance.value.quantity
+        : null;
 
-  if (d != null && isFinite(d)) return d < renderRadius;
+      if (d != null && isFinite(d)) return d < renderRadius;
 
-  // fallback: compute from raw coords if solDistance missing
-  const c = m.objectData.cartesianCoordsInLys;
-  if (c) {
-    const dist = Math.sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
-    return dist < renderRadius;
-  }
+      const c = m.objectData.cartesianCoordsInLys;
+      if (c) {
+        const dist = Math.sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
+        return dist < renderRadius;
+      }
 
-  return true; // if we can't tell, don't hide it
-}
+      return true;
+    }
 
+    if (entry.isStar) {
+      const sdata = findStarDataByPrimaryId(pid);
+      if (!sdata || !sdata.solDistance) return false;
+      return (sdata.solDistance.value.quantity < renderRadius);
+    }
 
-  // stars: use solDistance from catalog
-  if (entry.isStar) {
-    const sdata = findStarDataByPrimaryId(pid);
+    const pdata = findPlanetDataByPrimaryId(pid);
+    const starId = (pdata && pdata.starId != null) ? String(pdata.starId)
+                 : (entry.starId != null ? String(entry.starId) : null);
+    if (!starId) return false;
+
+    const sdata = findStarDataByPrimaryId(starId);
     if (!sdata || !sdata.solDistance) return false;
     return (sdata.solDistance.value.quantity < renderRadius);
   }
-
-  // planets: only show if their parent star is render-visible
-  const pdata = findPlanetDataByPrimaryId(pid);
-  const starId = (pdata && pdata.starId != null) ? String(pdata.starId)
-               : (entry.starId != null ? String(entry.starId) : null);
-  if (!starId) return false;
-
-  const sdata = findStarDataByPrimaryId(starId);
-  if (!sdata || !sdata.solDistance) return false;
-  return (sdata.solDistance.value.quantity < renderRadius);
-}
-
 
   function computeLegLy(prevMesh, newMesh){
     if (!prevMesh || !newMesh) return 0;
@@ -2133,68 +2122,62 @@ if (entry.type === "VIRTUAL_STAR") {
     return isFinite(d) ? d : 0;
   }
 
-function addVisitedEntry(mesh, legLy){
-  if (!mesh || !mesh.objectData) return;
+  function addVisitedEntry(mesh, legLy){
+    if (!mesh || !mesh.objectData) return;
 
-  const data = mesh.objectData;
-  const pid = String(data.primaryId);
+    const data = mesh.objectData;
+    const pid = String(data.primaryId);
 
-  // ✅ INCLUDE virtual stars as stars
-  const isStarType = (data.type === "STAR" || data.type === "VIRTUAL_STAR");
+    const isStarType = (data.type === "STAR" || data.type === "VIRTUAL_STAR");
 
-  if (!visitedById[pid]) {
-    visitedById[pid] = {
-      primaryId: pid,
-      type: data.type || "OBJECT",
-      isStar: isStarType,
-      name: getDisplayNameFromData(data),
-      meshRef: mesh,
-      legLy: legLy || 0
-    };
-    visitedLog.push(visitedById[pid]);
-  } else {
-    visitedById[pid].name = getDisplayNameFromData(data);
-    visitedById[pid].meshRef = mesh;
-    visitedById[pid].legLy = legLy || visitedById[pid].legLy;
-    visitedById[pid].isStar = isStarType;
-    visitedById[pid].type = data.type || visitedById[pid].type;
+    if (!visitedById[pid]) {
+      visitedById[pid] = {
+        primaryId: pid,
+        type: data.type || "OBJECT",
+        isStar: isStarType,
+        name: getDisplayNameFromData(data),
+        meshRef: mesh,
+        legLy: legLy || 0
+      };
+      visitedLog.push(visitedById[pid]);
+    } else {
+      visitedById[pid].name = getDisplayNameFromData(data);
+      visitedById[pid].meshRef = mesh;
+      visitedById[pid].legLy = legLy || visitedById[pid].legLy;
+      visitedById[pid].isStar = isStarType;
+      visitedById[pid].type = data.type || visitedById[pid].type;
+    }
+
+    renderVisitedList();
   }
 
-  renderVisitedList();
-}
+  const hideVirtualStarsEl = document.getElementById("hideVisitedVirtualStars");
 
+  function renderVisitedList(){
+    if (!visitedListEl) return;
 
-const hideVirtualStarsEl = document.getElementById("hideVisitedVirtualStars");
+    const hideStars   = !!(hideVisitedStarsEl && hideVisitedStarsEl.checked);
+    const hidePlanets = !!(hideVisitedPlanetsEl && hideVisitedPlanetsEl.checked);
+    const hideVirtual = !!(hideVirtualStarsEl && hideVirtualStarsEl.checked);
 
-function renderVisitedList(){
-  if (!visitedListEl) return;
+    visitedListEl.innerHTML = "";
 
-  const hideStars   = !!(hideVisitedStarsEl && hideVisitedStarsEl.checked);
-  const hidePlanets = !!(hideVisitedPlanetsEl && hideVisitedPlanetsEl.checked);
-  const hideVirtual = !!(hideVirtualStarsEl && hideVirtualStarsEl.checked);
+    const filtered = visitedLog.filter(e => {
+      if (!isEntryInRenderRange(e)) return false;
 
-  visitedListEl.innerHTML = "";
+      if (e.type === "VIRTUAL_STAR") {
+        const live = resolveMeshByPrimaryId(e.primaryId);
+        if (!live) return false;
+        e.meshRef = live;
+        e.name = getDisplayNameFromData(live.objectData);
+      }
 
-const filtered = visitedLog.filter(e => {
-  // ✅ don’t show anything outside render radius (safe for stars AND planets)
-  if (!isEntryInRenderRange(e)) return false;
+      if (e.isStar && hideStars) return false;
+      if (!e.isStar && hidePlanets) return false;
+      if (e.type === "VIRTUAL_STAR" && hideVirtual) return false;
 
-  // ✅ virtual stars: only show if they currently exist
-  if (e.type === "VIRTUAL_STAR") {
-    const live = resolveMeshByPrimaryId(e.primaryId);
-    if (!live) return false;           // hide if not spawned right now
-    e.meshRef = live;                  // refresh reference
-    e.name = getDisplayNameFromData(live.objectData); // refresh name if needed
-  }
-
-  if (e.isStar && hideStars) return false;
-  if (!e.isStar && hidePlanets) return false;
-
-  if (e.type === "VIRTUAL_STAR" && hideVirtual) return false;
-
-  return true;
-});
-
+      return true;
+    });
 
     if (!filtered.length) {
       visitedListEl.innerHTML = '<div class="visited-empty">No visits yet…</div>';
@@ -2415,10 +2398,8 @@ const filtered = visitedLog.filter(e => {
   function openVisitDetails(primaryId){
     const pid = String(primaryId);
 
-    // ✅ prefer real mesh if exists
     let mesh = resolveMeshByPrimaryId(pid);
 
-    // ✅ if no mesh, build a lightweight fake mesh from catalog data
     if (!mesh) {
       const pdata = findPlanetDataByPrimaryId(pid);
       if (pdata) {
@@ -2554,47 +2535,43 @@ const filtered = visitedLog.filter(e => {
         }
       });
 
-if (data.starId != null) {
-  const sdata = findStarDataByPrimaryId(String(data.starId));
-  if (sdata) {
-    const sid = String(sdata.primaryId);
-    const sname = getDisplayNameFromData(sdata);
+      if (data.starId != null) {
+        const sdata = findStarDataByPrimaryId(String(data.starId));
+        if (sdata) {
+          const sid = String(sdata.primaryId);
+          const sname = getDisplayNameFromData(sdata);
 
-    html += `
-      <div class="vd-section">
-        <div class="vd-label">Parent Star</div>
-        <div>
-          <button class="vd-parent-star-btn" data-star-id="${sid}">
-            ◄ ${sname}
-          </button>
-        </div>
-      </div>
-    `;
-  }
-}
-
+          html += `
+            <div class="vd-section">
+              <div class="vd-label">Parent Star</div>
+              <div>
+                <button class="vd-parent-star-btn" data-star-id="${sid}">
+                  ◄ ${sname}
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
     }
 
     visitDetailsContentEl.innerHTML = html;
 
-    // ✅ Parent star "back" button
-const parentBtn = visitDetailsContentEl.querySelector(".vd-parent-star-btn");
-if (parentBtn) {
-  parentBtn.addEventListener("click", function(ev){
-    ev.stopPropagation();
-    const sid = parentBtn.dataset.starId;
-    if (sid) openVisitDetails(sid);   // swaps popup to star info
-  });
-}
+    const parentBtn = visitDetailsContentEl.querySelector(".vd-parent-star-btn");
+    if (parentBtn) {
+      parentBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        const sid = parentBtn.dataset.starId;
+        if (sid) openVisitDetails(sid);
+      });
+    }
 
-    
     if (isStarType) {
       const rows = visitDetailsContentEl.querySelectorAll(".vd-planet-row[data-planet-id]");
       rows.forEach(r => {
         const pid = r.dataset.planetId;
         const sid = r.dataset.starId;
 
-        // ► play travels
         const play = r.querySelector(".vd-play");
         if (play) {
           play.addEventListener("click", function(ev){
@@ -2603,7 +2580,6 @@ if (parentBtn) {
           });
         }
 
-        // row click opens planet info page
         r.addEventListener("click", function(){
           if (pid) openVisitDetails(pid);
         });
@@ -2624,7 +2600,6 @@ if (parentBtn) {
       const pid = String(detailsTargetMesh.objectData.primaryId);
       if (homeworldById[pid]) return;
 
-      // if fake mesh, try to resolve a real one for colonize/homeworld tracking
       const realMesh = resolveMeshByPrimaryId(pid);
       const meshToUse = realMesh || detailsTargetMesh;
 
@@ -2637,7 +2612,6 @@ if (parentBtn) {
     });
   }
 
-  // Apply a rename to stars and planet data consistently
   function applyRenameToData(pid, newName){
     pid = String(pid);
     if (!newName) return;
@@ -2673,7 +2647,6 @@ if (parentBtn) {
     }
   }
 
-  // Mock rename
   if (visitRenameBtnEl) {
     visitRenameBtnEl.addEventListener("click", function(){
       if (!detailsTargetMesh || !detailsTargetMesh.objectData) return;
@@ -2686,7 +2659,6 @@ if (parentBtn) {
 
       applyRenameToData(pid, newName);
 
-      // ✅ persist rename in map
       renamedById[pid] = newName;
 
       if (currentObjectMesh && currentObjectMesh.objectData &&
@@ -3027,11 +2999,11 @@ if (parentBtn) {
 
   const STARMAP_INDEX_URL = "https://xtdevelopment.net/chat-proxy/starmaps/starmaps.php";
   // ✅ remember last loaded catalog for saving
-let lastCatalogURL = DEFAULT_CATALOG_URL;
-let lastCatalogLabel = "server_catalog";
+  let lastCatalogURL = DEFAULT_CATALOG_URL;
+  let lastCatalogLabel = "server_catalog";
   // ✅ cache the exact catalog file text we got from server/local
-let lastCatalogRawText = null;
-let lastCatalogRawURL  = null;
+  let lastCatalogRawText = null;
+  let lastCatalogRawURL  = null;
 
   let mapAlive = false;
 
@@ -3130,7 +3102,6 @@ let lastCatalogRawURL  = null;
 
     initializeobjectData();
 
-    // ✅ re-apply renames after reloading catalog
     for (const pid in renamedById) {
       applyRenameToData(pid, renamedById[pid]);
     }
@@ -3158,13 +3129,12 @@ let lastCatalogRawURL  = null;
   }
 
   function loadCatalogFromURL(url, isCustom) {
-      // ✅ track last loaded catalog
-  lastCatalogURL = url;
-  try {
-    lastCatalogLabel = (url.split("/").pop() || "catalog").replace(/\?.*$/,"");
-  } catch(e) {
-    lastCatalogLabel = "catalog";
-  }
+    lastCatalogURL = url;
+    try {
+      lastCatalogLabel = (url.split("/").pop() || "catalog").replace(/\?.*$/,"");
+    } catch(e) {
+      lastCatalogLabel = "catalog";
+    }
     if (catalogStatusEl) {
       catalogStatusEl.style.color = "#ffb";
       catalogStatusEl.textContent = "Loading catalog...";
@@ -3177,9 +3147,8 @@ let lastCatalogRawURL  = null;
       url: cacheBust(url),
       success: function (data) {
         try {
-              // ✅ store EXACT raw text from server (unchanged)
-    lastCatalogRawText = data;
-    lastCatalogRawURL  = url;
+          lastCatalogRawText = data;
+          lastCatalogRawURL  = url;
           var obj = JSON.parse(data);
 
           if (isCustom) obj = renameSolIfCustom(obj);
@@ -3217,17 +3186,15 @@ let lastCatalogRawURL  = null;
       var file = ev.target.files && ev.target.files[0];
       if (!file) return;
 
-        // ✅ track last loaded catalog (local file)
-  lastCatalogURL = null;
-  lastCatalogLabel = file.name || "local_catalog";
+      lastCatalogURL = null;
+      lastCatalogLabel = file.name || "local_catalog";
 
       var reader = new FileReader();
       reader.onload = function() {
         try {
           var raw = reader.result;
-              // ✅ store EXACT raw text from local file too
-    lastCatalogRawText = raw;
-    lastCatalogRawURL  = "local-file";
+          lastCatalogRawText = raw;
+          lastCatalogRawURL  = "local-file";
 
           var obj = JSON.parse(raw);
           obj = renameSolIfCustom(obj);
@@ -3643,34 +3610,29 @@ let lastCatalogRawURL  = null;
 
   let pendingLoadedState = null;
 
-const saveCatalogBtn = document.getElementById("saveCatalogBtn");
+  const saveCatalogBtn = document.getElementById("saveCatalogBtn");
 
-function buildCurrentCatalogObject(){
-  return {
-    stars: starData || [],
-    planets: planetData || []
-  };
-}
-
-function saveCurrentCatalog(){
-  if (!starData || !starData.length) {
-    console.warn("No catalog loaded to save.");
-    return;
+  function buildCurrentCatalogObject(){
+    return {
+      stars: starData || [],
+      planets: planetData || []
+    };
   }
 
-  const obj = buildCurrentCatalogObject();
-  const ts = new Date().toISOString().replace(/[:.]/g,"-");
-  const base = (lastCatalogLabel || "catalog").replace(/\.json$/i,"").replace(/\.txt$/i,"");
-  const fname = base + "_saved_" + ts + ".json";
+  function saveCurrentCatalog(){
+    if (!starData || !starData.length) {
+      console.warn("No catalog loaded to save.");
+      return;
+    }
 
-  downloadJSON(obj, fname);
-}
+    const obj = buildCurrentCatalogObject();
+    const ts = new Date().toISOString().replace(/[:.]/g,"-");
+    const base = (lastCatalogLabel || "catalog").replace(/\.json$/i,"").replace(/\.txt$/i,"");
+    const fname = base + "_saved_" + ts + ".json";
 
-//if (saveCatalogBtn) {
-//  saveCatalogBtn.addEventListener("click", saveCurrentCatalog);
-//}
+    downloadJSON(obj, fname);
+  }
 
-  
   function buildSaveObject(){
     const nowISO = new Date().toISOString();
     const totalSessionMs = getTotalSessionMsSoFar();
@@ -3734,45 +3696,42 @@ function saveCurrentCatalog(){
     downloadJSON(obj, fname);
   }
 
-
-
-function downloadRawText(text, filename){
-  const blob = new Blob([text], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function saveCurrentCatalogRaw(){
-  if (!lastCatalogRawText) {
-    console.warn("No raw catalog cached yet.");
-    return;
+  function downloadRawText(text, filename){
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
-  const ts = new Date().toISOString().replace(/[:.]/g,"-");
-  let base = "catalog";
+  function saveCurrentCatalogRaw(){
+    if (!lastCatalogRawText) {
+      console.warn("No raw catalog cached yet.");
+      return;
+    }
 
-  if (lastCatalogRawURL && typeof lastCatalogRawURL === "string") {
-    try {
-      base = (lastCatalogRawURL.split("/").pop() || "catalog").replace(/\?.*$/,"");
-      base = base.replace(/\.json$/i,"").replace(/\.txt$/i,"");
-    } catch(e){}
+    const ts = new Date().toISOString().replace(/[:.]/g,"-");
+    let base = "catalog";
+
+    if (lastCatalogRawURL && typeof lastCatalogRawURL === "string") {
+      try {
+        base = (lastCatalogRawURL.split("/").pop() || "catalog").replace(/\?.*$/,"");
+        base = base.replace(/\.json$/i,"").replace(/\.txt$/i,"");
+      } catch(e){}
+    }
+
+    const fname = base + "_RAW_" + ts + ".json";
+    downloadRawText(lastCatalogRawText, fname);
   }
 
-  const fname = base + "_RAW_" + ts + ".json";
-  downloadRawText(lastCatalogRawText, fname);
-}
+  if (saveCatalogBtn) {
+    saveCatalogBtn.addEventListener("click", saveCurrentCatalogRaw);
+  }
 
-if (saveCatalogBtn) {
-  saveCatalogBtn.addEventListener("click", saveCurrentCatalogRaw);
-}
-
-  
   function applyLoadedStateNow(state){
     if (!state || typeof state !== "object") return;
 
@@ -3883,44 +3842,6 @@ if (saveCatalogBtn) {
       loadSessionFile(file);
     });
   }
-
-// === Monkey-patch System.populatePlanets to add invisible click proxies ===
-(function(){
-  if (!window.System?.prototype?.populatePlanets) return;
-
-  const _origPopulate = System.prototype.populatePlanets;
-
-  System.prototype.populatePlanets = function(){
-    _origPopulate.apply(this, arguments);
-
-    if (!this.selectable) this.selectable = [];
-
-    const addList = [];
-
-    for (const obj of this.selectable) {
-      if (!obj?.objectData) continue;
-      const t = obj.objectData.type;
-      if (t === "STAR" || t === "VIRTUAL_STAR") continue;
-
-      // avoid duplicates
-      const already =
-        this.selectable.some(x => x?.userData?.isClickProxy &&
-          x.objectData?.primaryId === obj.objectData.primaryId);
-      if (already) continue;
-
-      const proxy = attachPlanetClickProxy(obj, 8);
-      if (proxy) addList.push(proxy);
-    }
-
-    // add proxies to selectable so raycaster sees them
-    addList.forEach(p => this.selectable.push(p));
-  };
-
-  console.log("populatePlanets patched v2: proxies beside planets + recursive raycast ready.");
-})();
-
-
-  
 </script>
 
 </body>
