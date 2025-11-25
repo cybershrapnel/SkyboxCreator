@@ -1870,16 +1870,14 @@
     if (visitTravelBtnEl) visitTravelBtnEl.disabled = false;
 
     // ✅ Move Star button only for stars
-if (visitMoveStarBtnEl) {
-  visitMoveStarBtnEl.addEventListener("click", function(){
-    if (!detailsTargetMesh || !detailsTargetMesh.objectData) return;
-    const t = detailsTargetMesh.objectData.type;
-    if (t !== "STAR" && t !== "VIRTUAL_STAR") return;
-    openMoveStarPopup(detailsTargetMesh);
-  });
-}
-
-
+    if (visitMoveStarBtnEl) {
+      if (isStarType) {
+        visitMoveStarBtnEl.style.display = "inline-block";
+        visitMoveStarBtnEl.disabled = false;
+      } else {
+        visitMoveStarBtnEl.style.display = "none";
+      }
+    }
 
     if (visitColonizeBtnEl) {
       if (isStarType || pidStr === "1") {
