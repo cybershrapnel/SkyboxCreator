@@ -3434,10 +3434,6 @@ function refreshStarmapList() {
 
   // ------------------------------------------------------------
   // 5) INTERNAL: derive the segment count from the .meq JSON
-  //    Supports:
-  //      __meq_segment_count (preferred)
-  //      __meq_appendix.__meq_segment_count
-  //      __meq_chunk_count / __meq_appendix.__meq_chunk_count (legacy)
   // ------------------------------------------------------------
   function getSegmentCountFromMeqJson(meqJson) {
     if (!meqJson || typeof meqJson !== "object") return 0;
@@ -3464,8 +3460,7 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 6) Loader: fetch .meq + .Sxx pieces, stitch, pass blob URL
-  //    We *never* fetch the .txt, only .meq and .Sxx on raw.
+  // 6) Loader: fetch .meq + .Sxx pieces, reconstruct JSON, pass blob URL
   // ------------------------------------------------------------
   function loadChunkedStarmapFromUrl(originalUrl) {
     var mapping = getChunkMappingFromUrl(originalUrl);
@@ -3489,10 +3484,11 @@ function refreshStarmapList() {
         return r.text();
       })
       .then(function (meqText) {
-        // Read segment count from the .meq JSON
         var segmentCount = 0;
+        var meqJson = null;
+
         try {
-          var meqJson = JSON.parse(meqText);
+          meqJson = JSON.parse(meqText);
           segmentCount = getSegmentCountFromMeqJson(meqJson);
         } catch (e) {
           console.warn("MEQ: failed to parse .meq JSON; treating as 0 segments.", e);
@@ -3504,6 +3500,7 @@ function refreshStarmapList() {
         if (!segmentCount || segmentCount < 1) {
           console.log("MEQ: no segments; using .meq as whole starmap");
           var blobNoSeg = new Blob([meqText], { type: "application/json" });
+          console.log("MEQ: .meq-only blob size:", blobNoSeg.size);
           var blobUrlNoSeg = URL.createObjectURL(blobNoSeg);
           if (typeof window.loadCatalogFromURL === "function") {
             window.loadCatalogFromURL(blobUrlNoSeg, true);
@@ -3536,13 +3533,38 @@ function refreshStarmapList() {
           .then(function (segmentTexts) {
             console.log("MEQ: all segments fetched, combining", segmentTexts.length, "segments");
 
-            // Order preserved: S01, S02, ...
-            var combinedText = segmentTexts.join("") + meqText;
+            // The Sxx chunks together are the main JSON (without __meq_appendix).
+            var bodyText = segmentTexts.join("");
 
-            var blob = new Blob([combinedText], { type: "application/json" });
+            var finalJsonStr;
+            try {
+              var baseObj = JSON.parse(bodyText);
+
+              // Pull appendix from meqJson
+              var appendixValue = null;
+              if (meqJson && typeof meqJson === "object") {
+                if (meqJson.__meq_appendix !== undefined) {
+                  appendixValue = meqJson.__meq_appendix;
+                } else {
+                  // If for some reason the whole meqJson *is* the appendix
+                  appendixValue = meqJson;
+                }
+              }
+
+              if (appendixValue !== null) {
+                baseObj.__meq_appendix = appendixValue;
+              }
+
+              finalJsonStr = JSON.stringify(baseObj);
+            } catch (e) {
+              console.error("MEQ: JSON reconstruction failed, falling back to raw concatenation", e);
+              // Fallback: still give loadCatalogFromURL *something*.
+              finalJsonStr = bodyText + meqText;
+            }
+
+            var blob = new Blob([finalJsonStr], { type: "application/json" });
+            console.log("MEQ: created blob URL", blob, "size", blob.size);
             var blobUrl = URL.createObjectURL(blob);
-
-            console.log("MEQ: created blob URL", blobUrl);
 
             if (typeof window.loadCatalogFromURL === "function") {
               window.loadCatalogFromURL(blobUrl, true);
