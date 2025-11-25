@@ -1577,39 +1577,51 @@
 
   // ✅ IMPORTANT FIX: use world position for nested objects in this heuristic
   function closestNonPrimaryObject(intersects, currentPrimary, currentStarPrimary) {
-    if (intersects.length == 0) return null;
+  if (!intersects || intersects.length === 0) return null;
 
-    var firstIntersect = intersects[0].object;
-    var firstIntersectId = firstIntersect.objectData.primaryId;
+  // Filter out any intersections that don't have objectData
+  const valid = intersects.filter(function (hit) {
+    return hit &&
+           hit.object &&
+           hit.object.objectData &&
+           typeof hit.object.objectData.primaryId !== "undefined";
+  });
 
-    if (intersects.length == 1 && currentPrimary) {
-      if (firstIntersectId == currentStarPrimary) return firstIntersect;
-      if (firstIntersectId != currentPrimary) return firstIntersect;
-    }
+  if (valid.length === 0) return null;
 
-    var lookPoint = camera.position;
-    var min = Number.MAX_VALUE;
-    var best = null;
+  var firstIntersect = valid[0].object;
+  var firstIntersectId = firstIntersect.objectData.primaryId;
 
-    const wp = new THREE.Vector3();
-
-    intersects.forEach(function (e) {
-      if (e.object && e.object.getWorldPosition) {
-        e.object.getWorldPosition(wp);
-      } else {
-        wp.copy(e.object.position);
-      }
-      var screenDistance = wp.distanceTo(e.point) / lookPoint.distanceTo(e.point);
-      var intersectId = e.object.objectData.primaryId;
-
-      if (screenDistance < min && intersectId != currentPrimary && intersectId != currentStarPrimary) {
-        best = e.object;
-        min = screenDistance;
-      }
-    });
-
-    return best;
+  if (valid.length === 1 && currentPrimary) {
+    if (firstIntersectId == currentStarPrimary) return firstIntersect;
+    if (firstIntersectId != currentPrimary) return firstIntersect;
   }
+
+  var lookPoint = camera.position;
+  var min = Number.MAX_VALUE;
+  var best = null;
+
+  valid.forEach(function (e) {
+    if (!e.object || !e.point) return;
+
+    var distToPoint = lookPoint.distanceTo(e.point);
+    if (!isFinite(distToPoint) || distToPoint === 0) return;
+
+    var screenDistance = e.object.position.distanceTo(e.point) / distToPoint;
+    var intersectId = e.object.objectData.primaryId;
+
+    if (screenDistance < min &&
+        intersectId != currentPrimary &&
+        intersectId != currentStarPrimary) {
+
+      best = e.object;
+      min = screenDistance;
+    }
+  });
+
+  return best;
+}
+
 
   // ✅ MAIN FIX: raycast whole currentSystem.object recursively, not selectable[]
   function getStarForPoint(x, y) {
