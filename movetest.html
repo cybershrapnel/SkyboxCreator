@@ -325,6 +325,8 @@
     <!-- ✅ actions -->
     <div id="visitActionRow">
       <button id="visitTravelBtn">Travel To</button>
+      <!-- ✅ NEW: Move Star button, only shown for stars -->
+      <button id="visitMoveStarBtn" style="display:none;">Move Star</button>
       <button id="visitColonizeBtn" style="display:none;">Colonize</button>
     </div>
 
@@ -334,6 +336,43 @@
     </div>
 
     <div id="visitRenameMsg"></div>
+  </div>
+</div>
+
+<!-- ==========================
+     NEW: Move Star Popup
+     ========================== -->
+<div id="moveStarPopup" style="display:none;">
+  <div id="moveStarHeader">
+    <span id="moveStarTitle">Move Star</span>
+    <button id="moveStarClose" title="Close">×</button>
+  </div>
+
+  <div id="moveStarBody">
+    <div id="moveStarStarName" style="margin-bottom:8px;font-weight:bold;"></div>
+
+    <div class="move-star-row">
+      <label for="moveStarDeltaX">ΔX (ly)</label>
+      <input id="moveStarDeltaX" type="range" min="-20" max="20" step="0.1" value="0">
+      <span id="moveStarDeltaXValue">0.0</span>
+    </div>
+
+    <div class="move-star-row">
+      <label for="moveStarDeltaY">ΔY (ly)</label>
+      <input id="moveStarDeltaY" type="range" min="-20" max="20" step="0.1" value="0">
+      <span id="moveStarDeltaYValue">0.0</span>
+    </div>
+
+    <div class="move-star-row">
+      <label for="moveStarDeltaZ">ΔZ (ly)</label>
+      <input id="moveStarDeltaZ" type="range" min="-20" max="20" step="0.1" value="0">
+      <span id="moveStarDeltaZValue">0.0</span>
+    </div>
+
+    <div class="move-star-row" style="margin-top:10px;">
+      <button id="moveStarApply">Apply</button>
+      <button id="moveStarReset">Reset</button>
+    </div>
   </div>
 </div>
 
@@ -511,7 +550,7 @@
     $("#selector").accordion({
       collapsible: true,
       animate: 100,
-      heightStyle: 'content',
+      heightStyle: 'panel',
       active: 4
     });
 
@@ -645,12 +684,10 @@
   function extractMapUUID(catalogObj){
     if (!catalogObj || typeof catalogObj !== "object") return null;
 
-    // ✅ NEW: your real field location
     if (catalogObj.__meq_appendix && catalogObj.__meq_appendix.uuid) {
       return catalogObj.__meq_appendix.uuid;
     }
 
-    // older / alternate fallbacks
     return (
       catalogObj.uuid ||
       catalogObj.mapUUID ||
@@ -1484,7 +1521,7 @@
     // planets: only show if their parent star is render-visible
     const pdata = findPlanetDataByPrimaryId(pid);
     const starId = (pdata && pdata.starId != null) ? String(pdata.starId)
-               : (entry.starId != null ? String(entry.starId) : null);
+                 : (entry.starId != null ? String(entry.starId) : null);
     if (!starId) return false;
 
     const sdata = findStarDataByPrimaryId(starId);
@@ -1777,6 +1814,7 @@
 
   const visitTravelBtnEl    = document.getElementById("visitTravelBtn");
   const visitColonizeBtnEl  = document.getElementById("visitColonizeBtn");
+  const visitMoveStarBtnEl  = document.getElementById("visitMoveStarBtn");
 
   let detailsTargetMesh = null;
 
@@ -1830,6 +1868,16 @@
     if (visitRenameMsgEl) visitRenameMsgEl.textContent = "";
 
     if (visitTravelBtnEl) visitTravelBtnEl.disabled = false;
+
+    // ✅ Move Star button only for stars
+    if (visitMoveStarBtnEl) {
+      if (isStarType) {
+        visitMoveStarBtnEl.style.display = "inline-block";
+        visitMoveStarBtnEl.disabled = false;
+      } else {
+        visitMoveStarBtnEl.style.display = "none";
+      }
+    }
 
     if (visitColonizeBtnEl) {
       if (isStarType || pidStr === "1") {
@@ -2000,6 +2048,16 @@
         addColonyEntry(meshToUse);
       }
       fillVisitDetails(detailsTargetMesh);
+    });
+  }
+
+  // ✅ Move Star button click: opens the move-star popup for this star
+  if (visitMoveStarBtnEl) {
+    visitMoveStarBtnEl.addEventListener("click", function(){
+      if (!detailsTargetMesh || !detailsTargetMesh.objectData) return;
+      const t = detailsTargetMesh.objectData.type;
+      if (t !== "STAR" && t !== "VIRTUAL_STAR") return;
+      openMoveStarPopup(detailsTargetMesh);
     });
   }
 
@@ -2735,7 +2793,7 @@
   document.getElementById("autoExploreButton").addEventListener("click", toggleAutoExplore);
 
   /* ===========================================================
-     ✅ 2D Minimap (unchanged)
+     ✅ 2D Minimap
      =========================================================== */
 
   let minimapOpen = false;
@@ -3066,10 +3124,8 @@
 
     const mapUUIDToSave = currentMapUUID || null;
 
-    // ✅ warn if map UUID missing
     if (!mapUUIDToSave) {
       console.warn("Saving session with NULL map UUID. This session will not be loadable.");
-      // optional user-facing warning:
       alert("Warning: current map has no UUID. Session will save, but cannot be loaded later.");
     }
 
@@ -3199,9 +3255,6 @@
 
     console.log("[MEQ] UUID check passed; applying session state…");
 
-    // ✅ FROM HERE DOWN: keep your existing logic
-    // (resetSessionState, restoring renames, visited, colonies, homeworlds, etc.)
-
     resetSessionState("session-load");
 
     totalSessionMsAccum = Math.max(0, Number(state.totalSessionMs) || 0);
@@ -3313,6 +3366,140 @@
       loadSessionFile(file);
     });
   }
+
+  /* ===========================================================
+     ✅ Move Star Popup Logic
+     =========================================================== */
+
+  const moveStarPopup      = document.getElementById("moveStarPopup");
+  const moveStarHeaderEl   = document.getElementById("moveStarHeader");
+  const moveStarCloseEl    = document.getElementById("moveStarClose");
+  const moveStarTitleEl    = document.getElementById("moveStarTitle");
+  const moveStarStarNameEl = document.getElementById("moveStarStarName");
+
+  const moveStarDeltaXEl   = document.getElementById("moveStarDeltaX");
+  const moveStarDeltaYEl   = document.getElementById("moveStarDeltaY");
+  const moveStarDeltaZEl   = document.getElementById("moveStarDeltaZ");
+
+  const moveStarDeltaXValEl = document.getElementById("moveStarDeltaXValue");
+  const moveStarDeltaYValEl = document.getElementById("moveStarDeltaYValue");
+  const moveStarDeltaZValEl = document.getElementById("moveStarDeltaZValue");
+
+  const moveStarApplyEl    = document.getElementById("moveStarApply");
+  const moveStarResetEl    = document.getElementById("moveStarReset");
+
+  let moveStarTargetMesh    = null;
+  let moveStarBaseRawCoord  = null;
+
+  function updateMoveStarSliderLabels(){
+    if (moveStarDeltaXEl && moveStarDeltaXValEl) moveStarDeltaXValEl.textContent = (parseFloat(moveStarDeltaXEl.value) || 0).toFixed(1);
+    if (moveStarDeltaYEl && moveStarDeltaYValEl) moveStarDeltaYValEl.textContent = (parseFloat(moveStarDeltaYEl.value) || 0).toFixed(1);
+    if (moveStarDeltaZEl && moveStarDeltaZValEl) moveStarDeltaZValEl.textContent = (parseFloat(moveStarDeltaZEl.value) || 0).toFixed(1);
+  }
+
+  function openMoveStarPopup(mesh){
+    if (!moveStarPopup || !mesh || !mesh.objectData) return;
+
+    moveStarTargetMesh   = mesh;
+    moveStarBaseRawCoord = getRawOf(mesh);
+
+    const name = getDisplayNameFromData(mesh.objectData);
+    if (moveStarTitleEl) moveStarTitleEl.textContent = "Move Star";
+    if (moveStarStarNameEl) moveStarStarNameEl.textContent = name;
+
+    if (moveStarDeltaXEl) moveStarDeltaXEl.value = "0";
+    if (moveStarDeltaYEl) moveStarDeltaYEl.value = "0";
+    if (moveStarDeltaZEl) moveStarDeltaZEl.value = "0";
+    updateMoveStarSliderLabels();
+
+    moveStarPopup.style.display = "block";
+  }
+
+  function closeMoveStarPopup(){
+    if (moveStarPopup) moveStarPopup.style.display = "none";
+    moveStarTargetMesh   = null;
+    moveStarBaseRawCoord = null;
+  }
+
+  function applyMoveStarOffsets(){
+    if (!moveStarTargetMesh || !moveStarTargetMesh.objectData || !moveStarBaseRawCoord) return;
+
+    const dx = moveStarDeltaXEl ? (parseFloat(moveStarDeltaXEl.value) || 0) : 0;
+    const dy = moveStarDeltaYEl ? (parseFloat(moveStarDeltaYEl.value) || 0) : 0;
+    const dz = moveStarDeltaZEl ? (parseFloat(moveStarDeltaZEl.value) || 0) : 0;
+
+    const newX = moveStarBaseRawCoord.x + dx;
+    const newY = moveStarBaseRawCoord.y + dy;
+    const newZ = moveStarBaseRawCoord.z + dz;
+
+    const data = moveStarTargetMesh.objectData;
+    if (!data.cartesianCoordsInLys) data.cartesianCoordsInLys = { x:0, y:0, z:0 };
+
+    data.cartesianCoordsInLys.x = newX;
+    data.cartesianCoordsInLys.y = newY;
+    data.cartesianCoordsInLys.z = newZ;
+
+    const newDist = Math.sqrt(newX*newX + newY*newY + newZ*newZ);
+    if (!data.solDistance) {
+      data.solDistance = { source:"INFERRED", value:{ unit:"LY", quantity:newDist } };
+    } else if (data.solDistance.value) {
+      data.solDistance.value.quantity = newDist;
+    }
+
+    // update star's position in the scene relative to current offset
+    let offset = null;
+    if (currentSystem && currentSystem.star && currentSystem.star.objectData && currentSystem.star.objectData.cartesianCoordsInLys) {
+      offset = currentSystem.star.objectData.cartesianCoordsInLys;
+    } else if (lastSelectedStarRaw) {
+      offset = lastSelectedStarRaw;
+    }
+
+    if (offset) {
+      setOffset(data.cartesianCoordsInLys, moveStarTargetMesh.position, offset);
+    }
+
+    updateCatalogStats();
+    updateLineOfSightList(currentObjectMesh);
+    updateNearestStarsList(currentObjectMesh);
+    if (typeof drawMinimap === "function") drawMinimap();
+
+    if (detailsTargetMesh === moveStarTargetMesh) {
+      fillVisitDetails(detailsTargetMesh);
+    }
+  }
+
+  if (moveStarCloseEl) {
+    moveStarCloseEl.addEventListener("click", function(){
+      closeMoveStarPopup();
+    });
+  }
+
+  if (moveStarDeltaXEl) moveStarDeltaXEl.addEventListener("input", updateMoveStarSliderLabels);
+  if (moveStarDeltaYEl) moveStarDeltaYEl.addEventListener("input", updateMoveStarSliderLabels);
+  if (moveStarDeltaZEl) moveStarDeltaZEl.addEventListener("input", updateMoveStarSliderLabels);
+
+  if (moveStarApplyEl) {
+    moveStarApplyEl.addEventListener("click", function(){
+      applyMoveStarOffsets();
+    });
+  }
+
+  if (moveStarResetEl) {
+    moveStarResetEl.addEventListener("click", function(){
+      if (moveStarDeltaXEl) moveStarDeltaXEl.value = "0";
+      if (moveStarDeltaYEl) moveStarDeltaYEl.value = "0";
+      if (moveStarDeltaZEl) moveStarDeltaZEl.value = "0";
+      updateMoveStarSliderLabels();
+    });
+  }
+
+  $(function(){
+    $("#moveStarPopup").draggable({
+      handle: "#moveStarHeader",
+      containment: "window"
+    });
+  });
+
 </script>
 
 </body>
