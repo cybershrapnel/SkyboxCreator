@@ -2026,23 +2026,28 @@ function isEntryInRenderRange(entry){
   if (!entry || entry.primaryId == null) return false;
   const pid = String(entry.primaryId);
 
-  // ✅ allow virtual stars using their own objectData
-  if (entry.type === "VIRTUAL_STAR") {
-    const m = entry.meshRef;
-    const d = m && m.objectData && m.objectData.solDistance
-      ? m.objectData.solDistance.value.quantity
-      : null;
+// ✅ allow virtual stars using their own objectData
+if (entry.type === "VIRTUAL_STAR") {
+  // grab the currently-alive mesh if it exists
+  const m = resolveMeshByPrimaryId(pid) || entry.meshRef;
+  if (!m || !m.objectData) return false; // if it's not alive, it's not in range
 
-    if (d != null && isFinite(d)) return d < renderRadius;
+  const d = m.objectData.solDistance
+    ? m.objectData.solDistance.value.quantity
+    : null;
 
-    // fallback: compute from raw coords if solDistance missing
-    const c = m && m.objectData && m.objectData.cartesianCoordsInLys;
-    if (c) {
-      const dist = Math.sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
-      return dist < renderRadius;
-    }
-    return true; // if we can't tell, don't hide it
+  if (d != null && isFinite(d)) return d < renderRadius;
+
+  // fallback: compute from raw coords if solDistance missing
+  const c = m.objectData.cartesianCoordsInLys;
+  if (c) {
+    const dist = Math.sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
+    return dist < renderRadius;
   }
+
+  return true; // if we can't tell, don't hide it
+}
+
 
   // stars: use solDistance from catalog
   if (entry.isStar) {
@@ -2120,6 +2125,14 @@ const filtered = visitedLog.filter(e => {
   // ✅ don’t show anything outside render radius (safe for stars AND planets)
   if (!isEntryInRenderRange(e)) return false;
 
+  // ✅ virtual stars: only show if they currently exist
+  if (e.type === "VIRTUAL_STAR") {
+    const live = resolveMeshByPrimaryId(e.primaryId);
+    if (!live) return false;           // hide if not spawned right now
+    e.meshRef = live;                  // refresh reference
+    e.name = getDisplayNameFromData(live.objectData); // refresh name if needed
+  }
+
   if (e.isStar && hideStars) return false;
   if (!e.isStar && hidePlanets) return false;
 
@@ -2127,6 +2140,7 @@ const filtered = visitedLog.filter(e => {
 
   return true;
 });
+
 
     if (!filtered.length) {
       visitedListEl.innerHTML = '<div class="visited-empty">No visits yet…</div>';
