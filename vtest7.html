@@ -3827,6 +3827,13 @@ const stateUUID = (
   (state.meta && (state.meta.uuid || state.meta.mapUUID)) ||
   null
 );
+console.log("[MEQ] Session load attempt:");
+console.log("      currentMapUUID =", currentMapUUID);
+console.log("      sessionUUID    =", stateUUID);
+
+if (!currentMapUUID) {
+  console.warn("[MEQ] Current map UUID is NULL -> skipping mismatch validation.");
+}
 
 // ✅ HARD FAIL: session must always have a uuid
 if (!stateUUID) {
