@@ -342,7 +342,7 @@
 <!-- ==========================
      NEW: Move Star Popup
      ========================== -->
-<div id="moveStarPopup" style="display:none;">
+<div id="moveStarPopup" style="display:none; position:absolute; top:80px; left:50%; transform:translateX(-50%); z-index:9999;">
   <div id="moveStarHeader">
     <span id="moveStarTitle">Move Star</span>
     <button id="moveStarClose" title="Close">×</button>
@@ -1870,14 +1870,27 @@
     if (visitTravelBtnEl) visitTravelBtnEl.disabled = false;
 
     // ✅ Move Star button only for stars
-    if (visitMoveStarBtnEl) {
-      if (isStarType) {
-        visitMoveStarBtnEl.style.display = "inline-block";
-        visitMoveStarBtnEl.disabled = false;
-      } else {
-        visitMoveStarBtnEl.style.display = "none";
-      }
+if (visitMoveStarBtnEl) {
+  visitMoveStarBtnEl.addEventListener("click", function () {
+    // always try to move the star we’re actually orbiting / selected
+    let starMesh = null;
+
+    // if we have a real star in the current system, use that
+    if (currentSystem && currentSystem.star) {
+      starMesh = currentSystem.star;
     }
+    // fall back to whatever the details popup is showing
+    else if (detailsTargetMesh && detailsTargetMesh.objectData) {
+      starMesh = detailsTargetMesh;
+    }
+
+    if (!starMesh || !starMesh.objectData) return;
+
+    // force it to be treated as a star even if type is weird
+    openMoveStarPopup(starMesh);
+  });
+}
+
 
     if (visitColonizeBtnEl) {
       if (isStarType || pidStr === "1") {
