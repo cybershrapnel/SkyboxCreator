@@ -1641,7 +1641,7 @@ function attachPlanetClickProxy(planetMesh, radiusMult = 6) {
 
       if (currentSystem) {
         var last = closestNonPrimaryObject(
-          raycaster.intersectObjects(currentSystem.selectable, false),
+          raycaster.intersectObjects(currentSystem.selectable, true),
           currentObjectPrimaryId,
           currentSystem.star.objectData.primaryId
         );
