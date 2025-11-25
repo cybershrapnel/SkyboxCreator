@@ -3812,22 +3812,26 @@ if (saveCatalogBtn) {
 }
 
   
- function applyLoadedStateNow(state){
+  function applyLoadedStateNow(state){
     if (!state || typeof state !== "object") return;
 
     const stateUUID = (
+      (state.__meq_appendix && state.__meq_appendix.uuid) ||  // ✅ your real session shape
       state.mapUUID ||
       state.uuid ||
       state.catalogUUID ||
       (state.meta && (state.meta.uuid || state.meta.mapUUID)) ||
       null
     );
-    if (!stateUUID) {
+
+    // ✅ if map has a UUID, session MUST have one
+    if (currentMapUUID && !stateUUID) {
+      console.warn("Session has no UUID but map does. Aborting.");
       alert("Session file has no map UUID. Load aborted.");
       return;
     }
 
-    // ✅ strict UUID match required if both exist
+    // ✅ strict match if both exist
     if (currentMapUUID && stateUUID && String(stateUUID) !== String(currentMapUUID)) {
       console.warn("Session map UUID mismatch:", stateUUID, "!= ", currentMapUUID);
       alert("That session belongs to a different map. Load aborted.");
@@ -3912,6 +3916,7 @@ if (saveCatalogBtn) {
       travelToPrimaryId(String(state.lastSelectedPrimaryId));
     }
   }
+
 
 
   function loadSessionFile(file){
