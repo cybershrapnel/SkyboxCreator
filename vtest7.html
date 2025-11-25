@@ -3339,7 +3339,6 @@ function refreshStarmapList() {
 
         var u = opts.url || "";
         if (typeof u === "string" && u.indexOf("blob:") === 0) {
-          // Handle blob: URL manually with fetch
           var dfd = $.Deferred();
           var dataType = (opts.dataType || "").toLowerCase();
 
@@ -3371,7 +3370,7 @@ function refreshStarmapList() {
           return dfd.promise();
         }
 
-        // Non-blob: → fall back to original jQuery ajax
+        // Non-blob: → original jQuery ajax
         return oldAjax.apply($, args);
       };
 
@@ -3382,39 +3381,25 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 3) Helper: map any txt URL -> .meq + .Sxx base
+  // 3) Map original URL -> .meq + .Sxx paths
+  //    NOTE: we do NOT ever request the .txt itself.
   // ------------------------------------------------------------
   function getChunkMappingFromUrl(originalUrl) {
     if (!originalUrl || typeof originalUrl !== "string") return null;
 
-    var url = originalUrl;
-
-    // Rewrite GitHub release URL -> raw GitHub URL
-    var ghReleasePrefix = "https://github.com/cybershrapnel/skybox/releases/download/starmaps/";
-    var ghRawPrefix     = "https://raw.githubusercontent.com/cybershrapnel/skybox/refs/heads/master/starmaps/";
-    if (url.indexOf(ghReleasePrefix) === 0) {
-      url = ghRawPrefix + url.substring(ghReleasePrefix.length);
-    }
-
-    var lastSlash = url.lastIndexOf("/");
+    var lastSlash = originalUrl.lastIndexOf("/");
     if (lastSlash === -1) return null;
 
-    var basePath = url.substring(0, lastSlash + 1); // includes trailing /
-    var fileName = url.substring(lastSlash + 1);    // e.g. Galactic-Sector-2.txt
+    var basePath = originalUrl.substring(0, lastSlash + 1);
+    var fileName = originalUrl.substring(lastSlash + 1); // e.g. 40k.txt (logical name)
 
     if (!fileName) return null;
 
-    // Python script naming:
-    //   original:  Galactic-Sector-2.txt
-    //   meq:       Galactic-Sector-2.txt.meq
-    //   chunks:    Galactic-Sector-2.txt.S01, .S02, ...
-    var meqUrl        = basePath + fileName + ".meq";
-    var segmentPrefix = basePath + fileName + ".S";
-
     return {
-      originalUrl: url,
-      meqUrl: meqUrl,
-      segmentPrefix: segmentPrefix
+      basePath: basePath,
+      fileName: fileName,
+      meqUrl: basePath + fileName + ".meq",   // 40k.txt.meq
+      segmentPrefix: basePath + fileName + ".S" // 40k.txt.S01, .S02, ...
     };
   }
 
@@ -3424,26 +3409,26 @@ function refreshStarmapList() {
   function loadChunkedStarmapFromUrl(originalUrl) {
     var mapping = getChunkMappingFromUrl(originalUrl);
 
-    // If we can't map it, fall back to normal behavior
     if (!mapping) {
-      if (typeof window.loadCatalogFromURL === "function") {
-        window.loadCatalogFromURL(originalUrl, true);
-      } else {
-        console.error("loadCatalogFromURL not found.");
-      }
+      console.error("MEQ mapping failed for URL:", originalUrl);
       return;
     }
+
+    console.log("MEQ: chunked load for base URL:", originalUrl, mapping);
 
     var meqUrl = mapping.meqUrl;
 
     // Step 1: fetch the .meq file
     fetch(cacheBust(meqUrl), { cache: "no-store" })
       .then(function (r) {
-        if (!r.ok) throw new Error("Failed to fetch MEQ: " + meqUrl);
+        if (!r.ok) {
+          throw new Error("Failed to fetch MEQ: " + meqUrl + " (status " + r.status + ")");
+        }
+        console.log("MEQ: fetched .meq", meqUrl);
         return r.text();
       })
       .then(function (meqText) {
-        // Read chunk count
+        // Read chunk count from the .meq JSON
         var chunkCount = 0;
         try {
           var meqJson = JSON.parse(meqText);
@@ -3458,13 +3443,20 @@ function refreshStarmapList() {
             }
           }
         } catch (e) {
-          console.warn("Failed to parse .meq JSON; treating as 0 chunks.", e);
+          console.warn("MEQ: failed to parse .meq JSON; treating as 0 chunks.", e);
         }
 
-        if (!chunkCount || chunkCount < 0) {
-          console.warn("No valid __meq_chunk_count found, using direct URL instead:", originalUrl);
+        console.log("MEQ: chunk count from .meq =", chunkCount);
+
+        // If no chunks recorded, treat the .meq as the full file
+        if (!chunkCount || chunkCount < 1) {
+          console.log("MEQ: no segments; using .meq as whole starmap");
+          var blobNoSeg = new Blob([meqText], { type: "application/json" });
+          var blobUrlNoSeg = URL.createObjectURL(blobNoSeg);
           if (typeof window.loadCatalogFromURL === "function") {
-            window.loadCatalogFromURL(mapping.originalUrl, true);
+            window.loadCatalogFromURL(blobUrlNoSeg, true);
+          } else {
+            console.error("loadCatalogFromURL not found.");
           }
           return;
         }
@@ -3472,26 +3464,34 @@ function refreshStarmapList() {
         // Step 2: fetch all .Sxx pieces in parallel
         var segmentPromises = [];
         for (var i = 1; i <= chunkCount; i++) {
-          var idx = String(i).padStart(2, "0"); // S01, S02, ...
-          var segUrl = mapping.segmentPrefix + idx;
-          segmentPromises.push(
-            fetch(cacheBust(segUrl), { cache: "no-store" })
-              .then(function (resp) {
-                if (!resp.ok) throw new Error("Failed to fetch segment: " + resp.url);
-                return resp.text();
-              })
-          );
+          (function (iCopy) {
+            var idx = String(iCopy).padStart(2, "0"); // S01, S02, ...
+            var segUrl = mapping.segmentPrefix + idx;
+            console.log("MEQ: fetching segment", segUrl);
+            segmentPromises.push(
+              fetch(cacheBust(segUrl), { cache: "no-store" })
+                .then(function (resp) {
+                  if (!resp.ok) {
+                    throw new Error("Failed to fetch segment: " + segUrl + " (status " + resp.status + ")");
+                  }
+                  return resp.text();
+                })
+            );
+          })(i);
         }
 
         return Promise.all(segmentPromises)
           .then(function (segmentTexts) {
-            // Order preserved by Promise.all → S01, S02, ... SNN
+            console.log("MEQ: all segments fetched, combining", segmentTexts.length, "segments");
+
+            // Order preserved by Promise.all index: S01, S02, ...
             var combinedText = segmentTexts.join("") + meqText;
 
             var blob = new Blob([combinedText], { type: "application/json" });
             var blobUrl = URL.createObjectURL(blob);
 
-            // Hand off to your existing loader (now with blob-safe $.ajax)
+            console.log("MEQ: created blob URL", blobUrl);
+
             if (typeof window.loadCatalogFromURL === "function") {
               window.loadCatalogFromURL(blobUrl, true);
             } else {
@@ -3500,10 +3500,7 @@ function refreshStarmapList() {
           });
       })
       .catch(function (err) {
-        console.error("Chunked starmap load failed, falling back to direct URL:", err);
-        if (typeof window.loadCatalogFromURL === "function") {
-          window.loadCatalogFromURL(mapping.originalUrl || originalUrl, true);
-        }
+        console.error("MEQ: chunked starmap load FAILED for base URL:", originalUrl, err);
       });
   }
 
@@ -3540,6 +3537,7 @@ function refreshStarmapList() {
 
     row.dataset.url = url;
     row.onclick = function () {
+      // Always go through our chunk-aware loader
       loadChunkedStarmapFromUrl(url);
     };
 
