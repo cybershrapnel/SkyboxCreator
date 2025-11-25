@@ -789,6 +789,8 @@
 
         <!-- ✅ Save / Load buttons in the Map section tab -->
         <button id="saveSessionBtn" class="catalog-btn">Save Session</button>
+        <!-- ✅ NEW: Save the currently loaded catalog/starmap JSON -->
+<button id="saveCatalogBtn" class="catalog-btn">Save Current Map (Catalog JSON)</button>
         <button id="loadSessionBtn" class="catalog-btn">Load Session</button>
         <input id="sessionFileInput" type="file" accept=".json,application/json,text/plain" style="display:none;">
 
@@ -2948,6 +2950,10 @@ const filtered = visitedLog.filter(e => {
   const starmapListEl    = document.getElementById("starmapList");
 
   const STARMAP_INDEX_URL = "https://xtdevelopment.net/chat-proxy/starmaps/starmaps.php";
+  // ✅ remember last loaded catalog for saving
+let lastCatalogURL = DEFAULT_CATALOG_URL;
+let lastCatalogLabel = "server_catalog";
+
   let mapAlive = false;
 
   function getHashCatalogURL() {
@@ -3073,6 +3079,13 @@ const filtered = visitedLog.filter(e => {
   }
 
   function loadCatalogFromURL(url, isCustom) {
+      // ✅ track last loaded catalog
+  lastCatalogURL = url;
+  try {
+    lastCatalogLabel = (url.split("/").pop() || "catalog").replace(/\?.*$/,"");
+  } catch(e) {
+    lastCatalogLabel = "catalog";
+  }
     if (catalogStatusEl) {
       catalogStatusEl.style.color = "#ffb";
       catalogStatusEl.textContent = "Loading catalog...";
@@ -3121,6 +3134,10 @@ const filtered = visitedLog.filter(e => {
     catalogFileInput.addEventListener("change", function(ev) {
       var file = ev.target.files && ev.target.files[0];
       if (!file) return;
+
+        // ✅ track last loaded catalog (local file)
+  lastCatalogURL = null;
+  lastCatalogLabel = file.name || "local_catalog";
 
       var reader = new FileReader();
       reader.onload = function() {
@@ -3540,6 +3557,34 @@ const filtered = visitedLog.filter(e => {
 
   let pendingLoadedState = null;
 
+const saveCatalogBtn = document.getElementById("saveCatalogBtn");
+
+function buildCurrentCatalogObject(){
+  return {
+    stars: starData || [],
+    planets: planetData || []
+  };
+}
+
+function saveCurrentCatalog(){
+  if (!starData || !starData.length) {
+    console.warn("No catalog loaded to save.");
+    return;
+  }
+
+  const obj = buildCurrentCatalogObject();
+  const ts = new Date().toISOString().replace(/[:.]/g,"-");
+  const base = (lastCatalogLabel || "catalog").replace(/\.json$/i,"").replace(/\.txt$/i,"");
+  const fname = base + "_saved_" + ts + ".json";
+
+  downloadJSON(obj, fname);
+}
+
+if (saveCatalogBtn) {
+  saveCatalogBtn.addEventListener("click", saveCurrentCatalog);
+}
+
+  
   function buildSaveObject(){
     const nowISO = new Date().toISOString();
     const totalSessionMs = getTotalSessionMsSoFar();
