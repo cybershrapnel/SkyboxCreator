@@ -3731,12 +3731,16 @@ function saveCurrentCatalog(){
 
 const mapUUIDToSave = currentMapUUID || null;
 
+// ✅ warn if map UUID missing
+if (!mapUUIDToSave) {
+  console.warn("Saving session with NULL map UUID. This session will not be loadable.");
+  // optional user-facing warning:
+  alert("Warning: current map has no UUID. Session will save, but cannot be loaded later.");
+}
+
 return {
   version: 2,
-
-  // ✅ ONLY ONE UUID FIELD, TOP-LEVEL
   uuid: mapUUIDToSave,
-
   saveTimeISO: nowISO,
   sessionStartISO: sessionStartISO,
   totalSessionMs: totalSessionMs,
@@ -3748,6 +3752,7 @@ return {
   homeworlds,
   lastSelectedPrimaryId: currentObjectPrimaryId || null
 };
+
 
 
 
@@ -3815,10 +3820,7 @@ if (saveCatalogBtn) {
     if (!state || typeof state !== "object") return;
 
 const stateUUID = (
-  // ✅ new correct session shape
   state.uuid ||
-
-  // ✅ tolerate old saves
   state.mapUUID ||
   (state.__meq_appendix && state.__meq_appendix.uuid) ||
   state.catalogUUID ||
@@ -3826,13 +3828,13 @@ const stateUUID = (
   null
 );
 
+// ✅ HARD FAIL: session must always have a uuid
+if (!stateUUID) {
+  console.warn("Session file has NULL/empty uuid. Aborting load.");
+  alert("Session file has no UUID. Load aborted.");
+  return;
+}
 
-    // ✅ if map has a UUID, session MUST have one
-    if (currentMapUUID && !stateUUID) {
-      console.warn("Session has no UUID but map does. Aborting.");
-      alert("Session file has no map UUID. Load aborted.");
-      return;
-    }
 
     // ✅ strict match if both exist
     if (currentMapUUID && stateUUID && String(stateUUID) !== String(currentMapUUID)) {
