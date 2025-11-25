@@ -27,7 +27,8 @@
   <script src="js/PlanetBuilder.js"></script>
   <script src="resources/Detector.js"></script>
 
-  <style></style>
+  <style>
+  </style>
 </head>
 
 <body>
@@ -126,7 +127,7 @@
         <input id="jump_to_list" type="text">
         <br />
         <font size=1><center> Obtain a valid MEQUAVIS hyperstack<br />
-                             address from the NanoCheeZe JAVA app<br />
+                             address from the NanoCheeze JAVA app<br />
                              hint: There is only 1 active layer atm</center></font>
       </div>
     </div>
@@ -592,102 +593,6 @@
   var tooltipObject;
   var font;
 
-  /* ==========================================
-     Little orbs riding the purple star–planet lines
-     ========================================== */
-  var lineOrbs = [];
-  var _lineOrbTmpStart = new THREE.Vector3();
-  var _lineOrbTmpEnd   = new THREE.Vector3();
-  var _lineOrbTmpPos   = new THREE.Vector3();
-
-  function clearLineOrbs() {
-    lineOrbs.forEach(function(entry){
-      if (entry && entry.orb && entry.orb.parent) {
-        entry.orb.parent.remove(entry.orb);
-      }
-    });
-    lineOrbs = [];
-  }
-
-  function setupLineOrbsForCurrentSystem() {
-    clearLineOrbs();
-    if (!currentSystem || !currentSystem.object) return;
-
-    var candidates = [];
-    currentSystem.object.traverse(function(obj){
-      if (obj instanceof THREE.Line) {
-        candidates.push(obj);
-      }
-    });
-
-    candidates.forEach(function(line){
-      var geo = line.geometry;
-      var hasSegment = false;
-
-      if (geo && geo.isBufferGeometry && geo.attributes &&
-          geo.attributes.position && geo.attributes.position.count >= 2) {
-        hasSegment = true;
-      } else if (geo && geo.vertices && geo.vertices.length >= 2) {
-        hasSegment = true;
-      }
-
-      if (!hasSegment) return;
-
-      var orbGeo = new THREE.SphereGeometry(0.02, 10, 10);
-      var orbMat = new THREE.MeshBasicMaterial({
-        color: 0xff66ff,         // soft purple to match the lines vibe
-        transparent: true,
-        opacity: 0.9
-      });
-      var orb = new THREE.Mesh(orbGeo, orbMat);
-      scene.add(orb);
-
-      lineOrbs.push({
-        line: line,
-        orb: orb,
-        t: Math.random(),                                       // random starting point on the line
-        speed: (0.15 + Math.random() * 0.1) * (Math.random()<0.5 ? 1 : -1) // small back/forth speed
-      });
-    });
-  }
-
-  function updateLineOrbs(delta) {
-    if (!lineOrbs.length) return;
-
-    for (var i = 0; i < lineOrbs.length; i++) {
-      var entry = lineOrbs[i];
-      var line = entry.line;
-      var orb  = entry.orb;
-      if (!line || !orb || !line.geometry) continue;
-
-      var geo = line.geometry;
-
-      if (geo.isBufferGeometry && geo.attributes &&
-          geo.attributes.position && geo.attributes.position.count >= 2) {
-        _lineOrbTmpStart.fromBufferAttribute(geo.attributes.position, 0);
-        _lineOrbTmpEnd.fromBufferAttribute(geo.attributes.position, geo.attributes.position.count - 1);
-      } else if (geo.vertices && geo.vertices.length >= 2) {
-        _lineOrbTmpStart.copy(geo.vertices[0]);
-        _lineOrbTmpEnd.copy(geo.vertices[geo.vertices.length - 1]);
-      } else {
-        continue;
-      }
-
-      entry.t += entry.speed * delta;
-      if (entry.t > 1) {
-        entry.t = 1 - (entry.t - 1);
-        entry.speed *= -1;
-      } else if (entry.t < 0) {
-        entry.t = -entry.t;
-        entry.speed *= -1;
-      }
-
-      _lineOrbTmpPos.lerpVectors(_lineOrbTmpStart, _lineOrbTmpEnd, entry.t);
-      line.localToWorld(_lineOrbTmpPos);
-      orb.position.copy(_lineOrbTmpPos);
-    }
-  }
-
   var mouseX;
   var mouseY;
   var mouseMoved = false;
@@ -903,6 +808,8 @@
           function () {
             if (currentSystem && isStar(currentObjectMesh) && currentObjectMesh.objectData.type === "STAR") {
               currentSystem.populatePlanets();
+              // ✅ mark planet orbs dirty so they are rebuilt once planets exist
+              planetOrbsDirty = true;
             }
             if (isStar(prevStarMesh)) {
               (prevStarMesh.objectData.nearbyObjectIDs || []).forEach(function (e) {
@@ -950,6 +857,83 @@
   var currentObjectPrimaryId = "";
   var currentObjectMesh;
   var currentSystem;
+
+  /* ===========================================================
+     ✅ Little purple orbs travelling star→planet lines
+     =========================================================== */
+  var planetOrbs = [];
+  var planetOrbsDirty = false;
+  var planetOrbTmpVec3 = new THREE.Vector3();
+
+  function clearPlanetOrbs() {
+    planetOrbs.forEach(function (orb) {
+      if (orb && orb.parent) {
+        orb.parent.remove(orb);
+      }
+    });
+    planetOrbs = [];
+  }
+
+  function buildPlanetOrbs() {
+    clearPlanetOrbs();
+    if (!currentSystem || !currentSystem.star || !currentSystem.selectable) return;
+
+    var starMesh = currentSystem.star;
+    var starPosLocal = starMesh.position.clone();
+
+    // treat anything in currentSystem.selectable that is not a STAR/VIRTUAL_STAR as a planet/moon/etc.
+    var planetMeshes = currentSystem.selectable.filter(function (obj) {
+      return obj && obj.objectData &&
+             obj.objectData.type !== "STAR" &&
+             obj.objectData.type !== "VIRTUAL_STAR";
+    });
+
+    planetMeshes.forEach(function (planetMesh) {
+      var planetPosLocal = planetMesh.position.clone();
+      if (planetPosLocal.length() < 1e-6) return;
+
+      var orbGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+      var orbMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff66ff,
+        transparent: true,
+        opacity: 0.95
+      });
+
+      var orb = new THREE.Mesh(orbGeometry, orbMaterial);
+
+      orb.userData.planetOrb = {
+        starPos: starPosLocal.clone(),
+        planetPos: planetPosLocal.clone(),
+        t: Math.random(),                           // random starting position
+        dir: Math.random() < 0.5 ? 1 : -1,          // direction along the line
+        speed: 0.10 + Math.random() * 0.05          // ly fraction per second
+      };
+
+      currentSystem.object.add(orb);
+      planetOrbs.push(orb);
+    });
+  }
+
+  function updatePlanetOrbs(delta) {
+    if (!planetOrbs.length) return;
+
+    planetOrbs.forEach(function (orb) {
+      var info = orb.userData && orb.userData.planetOrb;
+      if (!info) return;
+
+      info.t += info.dir * info.speed * delta;
+      if (info.t > 1) {
+        info.t = 1;
+        info.dir = -1;
+      } else if (info.t < 0) {
+        info.t = 0;
+        info.dir = 1;
+      }
+
+      planetOrbTmpVec3.copy(info.starPos).lerp(info.planetPos, info.t);
+      orb.position.copy(planetOrbTmpVec3);
+    });
+  }
 
   function reassignLabel(targetMesh) {
     if (!tooltipObject || tooltipObject.objectData.primaryId == targetMesh.objectData.primaryId) return;
@@ -2329,9 +2313,12 @@ if (parentBtn) {
         scene.remove(prevSystem.object);
       }
 
+      // when switching star systems, clear any existing orbs and mark for rebuild
+      clearPlanetOrbs();
+      planetOrbsDirty = true;
+
       updateHighlight(currentSystem.star);
       scene.add(currentSystem.object);
-      setupLineOrbsForCurrentSystem();
       return;
     }
 
@@ -2343,7 +2330,8 @@ if (parentBtn) {
         } catch(e){}
         currentSystem = null;
       }
-      clearLineOrbs();
+      // no lines/planets for virtual stars → no orbs
+      clearPlanetOrbs();
       updateHighlight(mesh);
     }
   }
@@ -2420,6 +2408,15 @@ if (parentBtn) {
     solMarker.updateTo(camera, delta);
 
     if (currentSystem) {
+      // build orbs once planets are available
+      if (planetOrbsDirty && currentSystem.selectable && currentSystem.selectable.length) {
+        buildPlanetOrbs();
+        planetOrbsDirty = false;
+      }
+
+      // animate the little orbs along each star→planet line
+      updatePlanetOrbs(delta);
+
       var currentStar = currentSystem.star;
       if (currentStar) {
         (currentStar.objectData.nearbyObjectIDs || []).forEach(function (e) {
@@ -2442,8 +2439,6 @@ if (parentBtn) {
         distanceHeader.text(newDistance);
       }
     }
-
-    updateLineOrbs(delta);
     maybeDrawMinimap();
 
     updateTravelStats();
@@ -2549,7 +2544,6 @@ let lastCatalogRawURL  = null;
     try { if (tooltip) { scene.remove(tooltip.object); tooltip = null; } } catch(e){}
     try { if (lineSegment) { scene.remove(lineSegment); lineSegment = null; } } catch(e){}
     try { removeVirtualStars(); } catch(e){}
-    try { clearLineOrbs(); } catch(e){}
 
     if (currentSystem) {
       try { scene.remove(currentSystem.object); } catch(e){}
@@ -2565,6 +2559,10 @@ let lastCatalogRawURL  = null;
     visibleStarsByName = {};
     currentObjectMesh = null;
     currentObjectPrimaryId = "";
+
+    // also clear any planet orbs tied to previous map
+    clearPlanetOrbs();
+    planetOrbsDirty = false;
   }
 
   function validateCatalogObject(obj) {
