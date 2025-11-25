@@ -1007,6 +1007,40 @@
   const virtualStarAmpSlider = document.getElementById("virtualStarAmpSlider");
   const virtualStarAmpValue  = document.getElementById("virtualStarAmpValue");
 
+function attachPlanetClickProxy(planetMesh, radiusMult = 6) {
+  if (!planetMesh || !planetMesh.geometry || !planetMesh.objectData) return null;
+
+  // get a base radius from the visible mesh
+  if (!planetMesh.geometry.boundingSphere) {
+    planetMesh.geometry.computeBoundingSphere();
+  }
+  const baseR = planetMesh.geometry.boundingSphere
+    ? planetMesh.geometry.boundingSphere.radius
+    : 0.2; // fallback
+
+  const proxyGeom = new THREE.SphereGeometry(baseR * radiusMult, 8, 8);
+  const proxyMat = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    depthTest: false
+  });
+  proxyMat.colorWrite = false; // <-- key: truly invisible
+
+  const proxy = new THREE.Mesh(proxyGeom, proxyMat);
+  proxy.name = "planetClickProxy";
+  proxy.userData.isClickProxy = true;
+
+  // VERY IMPORTANT: make ray hits map to the real planet by id
+  proxy.objectData = planetMesh.objectData;
+
+  // parent it so it follows planet transforms
+  planetMesh.add(proxy);
+
+  return proxy;
+}
+
+  
   function getVirtualStarAmpMultiplier() {
     if (!virtualStarAmpSlider) return 1.0;
     const pct = parseFloat(virtualStarAmpSlider.value);
@@ -3848,6 +3882,47 @@ if (saveCatalogBtn) {
       loadSessionFile(file);
     });
   }
+
+// === Monkey-patch System.populatePlanets to add invisible click proxies ===
+(function(){
+  if (!window.System || !System.prototype || !System.prototype.populatePlanets) {
+    console.warn("System.populatePlanets not found yet.");
+    return;
+  }
+
+  const _origPopulate = System.prototype.populatePlanets;
+
+  System.prototype.populatePlanets = function(){
+    // run the real planet builder first
+    _origPopulate.apply(this, arguments);
+
+    if (!this.selectable || !this.selectable.length) return;
+
+    const proxiesToAdd = [];
+
+    for (const obj of this.selectable) {
+      if (!obj || !obj.objectData) continue;
+
+      const t = obj.objectData.type;
+      if (t === "STAR" || t === "VIRTUAL_STAR") continue; // only planets/moons/etc
+
+      // don't double-attach
+      const alreadyHasProxy =
+        (obj.children || []).some(c => c && c.userData && c.userData.isClickProxy);
+      if (alreadyHasProxy) continue;
+
+      const proxy = attachPlanetClickProxy(obj, 6);
+      if (proxy) proxiesToAdd.push(proxy);
+    }
+
+    // add proxies AFTER loop so we don't mutate selectable while iterating
+    for (const p of proxiesToAdd) this.selectable.push(p);
+  };
+
+  console.log("populatePlanets patched: planet click proxies enabled.");
+})();
+
+  
 </script>
 
 </body>
