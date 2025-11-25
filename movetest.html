@@ -2054,9 +2054,9 @@
   // ✅ Move Star button click: opens the move-star popup for this star
   if (visitMoveStarBtnEl) {
     visitMoveStarBtnEl.addEventListener("click", function(){
-      if (!detailsTargetMesh || !detailsTargetMesh.objectData) return;
-      const t = detailsTargetMesh.objectData.type;
-      if (t !== "STAR" && t !== "VIRTUAL_STAR") return;
+      //if (!detailsTargetMesh || !detailsTargetMesh.objectData) return;
+      //const t = detailsTargetMesh.objectData.type;
+      //if (t !== "STAR" && t !== "VIRTUAL_STAR") return;
       openMoveStarPopup(detailsTargetMesh);
     });
   }
