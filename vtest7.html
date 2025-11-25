@@ -658,6 +658,19 @@
       font-size:11px;
       color:#ffd28a;
     }
+    .vd-parent-star-btn{
+  font-size:12px;
+  padding:3px 8px;
+  cursor:pointer;
+  background: rgba(120,200,255,0.12);
+  border: 1px solid rgba(120,200,255,0.45);
+  color:#cfe3ff;
+  border-radius:4px;
+}
+.vd-parent-star-btn:hover{
+  background: rgba(120,200,255,0.25);
+}
+
   </style>
 </head>
 
@@ -2506,16 +2519,40 @@ const filtered = visitedLog.filter(e => {
         }
       });
 
-      if (data.starId != null) {
-        const sdata = findStarDataByPrimaryId(String(data.starId));
-        if (sdata) {
-          html += `<div class="vd-section"><div class="vd-label">Parent Star</div><div>${getDisplayNameFromData(sdata)}</div></div>`;
-        }
-      }
+if (data.starId != null) {
+  const sdata = findStarDataByPrimaryId(String(data.starId));
+  if (sdata) {
+    const sid = String(sdata.primaryId);
+    const sname = getDisplayNameFromData(sdata);
+
+    html += `
+      <div class="vd-section">
+        <div class="vd-label">Parent Star</div>
+        <div>
+          <button class="vd-parent-star-btn" data-star-id="${sid}">
+            ◄ ${sname}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+}
+
     }
 
     visitDetailsContentEl.innerHTML = html;
 
+    // ✅ Parent star "back" button
+const parentBtn = visitDetailsContentEl.querySelector(".vd-parent-star-btn");
+if (parentBtn) {
+  parentBtn.addEventListener("click", function(ev){
+    ev.stopPropagation();
+    const sid = parentBtn.dataset.starId;
+    if (sid) openVisitDetails(sid);   // swaps popup to star info
+  });
+}
+
+    
     if (isStarType) {
       const rows = visitDetailsContentEl.querySelectorAll(".vd-planet-row[data-planet-id]");
       rows.forEach(r => {
