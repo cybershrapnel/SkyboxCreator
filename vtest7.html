@@ -2953,6 +2953,9 @@ const filtered = visitedLog.filter(e => {
   // ✅ remember last loaded catalog for saving
 let lastCatalogURL = DEFAULT_CATALOG_URL;
 let lastCatalogLabel = "server_catalog";
+  // ✅ cache the exact catalog file text we got from server/local
+let lastCatalogRawText = null;
+let lastCatalogRawURL  = null;
 
   let mapAlive = false;
 
@@ -3098,6 +3101,9 @@ let lastCatalogLabel = "server_catalog";
       url: cacheBust(url),
       success: function (data) {
         try {
+              // ✅ store EXACT raw text from server (unchanged)
+    lastCatalogRawText = data;
+    lastCatalogRawURL  = url;
           var obj = JSON.parse(data);
 
           if (isCustom) obj = renameSolIfCustom(obj);
@@ -3143,6 +3149,10 @@ let lastCatalogLabel = "server_catalog";
       reader.onload = function() {
         try {
           var raw = reader.result;
+              // ✅ store EXACT raw text from local file too
+    lastCatalogRawText = raw;
+    lastCatalogRawURL  = "local-file";
+
           var obj = JSON.parse(raw);
           obj = renameSolIfCustom(obj);
           var parsed = validateCatalogObject(obj);
@@ -3648,6 +3658,45 @@ if (saveCatalogBtn) {
     downloadJSON(obj, fname);
   }
 
+const saveCatalogBtn = document.getElementById("saveCatalogBtn");
+
+function downloadRawText(text, filename){
+  const blob = new Blob([text], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function saveCurrentCatalogRaw(){
+  if (!lastCatalogRawText) {
+    console.warn("No raw catalog cached yet.");
+    return;
+  }
+
+  const ts = new Date().toISOString().replace(/[:.]/g,"-");
+  let base = "catalog";
+
+  if (lastCatalogRawURL && typeof lastCatalogRawURL === "string") {
+    try {
+      base = (lastCatalogRawURL.split("/").pop() || "catalog").replace(/\?.*$/,"");
+      base = base.replace(/\.json$/i,"").replace(/\.txt$/i,"");
+    } catch(e){}
+  }
+
+  const fname = base + "_RAW_" + ts + ".json";
+  downloadRawText(lastCatalogRawText, fname);
+}
+
+if (saveCatalogBtn) {
+  saveCatalogBtn.addEventListener("click", saveCurrentCatalogRaw);
+}
+
+  
   function applyLoadedStateNow(state){
     if (!state || typeof state !== "object") return;
 
