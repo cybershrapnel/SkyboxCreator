@@ -296,13 +296,24 @@
       border-top: 1px solid rgba(255,255,255,0.15);
       font-size: 12px;
     }
-    #visitedHeaderRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      margin-bottom: 4px;
-    }
+#visitedHeaderRow{
+  display:flex;
+  flex-direction:column;   /* <-- puts filters under title */
+  align-items:flex-start;
+  gap:2px;
+  margin-bottom:4px;
+}
+
+#visitedFilters{
+  width:100%;
+  justify-content:flex-start;
+  gap:10px;
+  font-size:11px;
+  color:#bbb;
+  white-space:normal;      /* allow wrap if needed */
+  flex-wrap:wrap;
+}
+
     #visitedHeader {
       font-weight: bold;
       color: #ff9fe8;
@@ -310,15 +321,7 @@
       letter-spacing: 0.3px;
       text-transform: uppercase;
     }
-    #visitedFilters{
-      display:flex;
-      gap:8px;
-      font-size:11px;
-      color:#bbb;
-      white-space:nowrap;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
+
     #visitedFilters label{
       display:flex;
       gap:4px;
@@ -699,10 +702,11 @@
       <div id="visitedContainer">
         <div id="visitedHeaderRow">
           <div id="visitedHeader">Visited Objects</div>
-          <div id="visitedFilters"><br />
-            <label><input type="checkbox" id="hideVisitedStars"> hide stars</label>
-            <label><input type="checkbox" id="hideVisitedPlanets"> hide planets</label>
-            <label><input type="checkbox" id="hideVisitedVirtualStars"> hide virtual</label>
+<div id="visitedFilters">
+  <label><input type="checkbox" id="hideVisitedStars"> hide stars</label>
+  <label><input type="checkbox" id="hideVisitedPlanets"> hide planets</label>
+  <label><input type="checkbox" id="hideVisitedVirtualStars"> hide virtual</label>
+</div>
           </div>
         </div>
         <div id="visitedList">
