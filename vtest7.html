@@ -1295,6 +1295,13 @@
 
   function extractMapUUID(catalogObj){
     if (!catalogObj || typeof catalogObj !== "object") return null;
+
+    // ✅ NEW: your real field location
+    if (catalogObj.__meq_appendix && catalogObj.__meq_appendix.uuid) {
+      return catalogObj.__meq_appendix.uuid;
+    }
+
+    // older / alternate fallbacks
     return (
       catalogObj.uuid ||
       catalogObj.mapUUID ||
@@ -1303,6 +1310,7 @@
       null
     );
   }
+
 
   // ✅ Reset ONLY session state (NOT catalog)
   function resetSessionState(reason){
@@ -3721,9 +3729,17 @@ function saveCurrentCatalog(){
       starId: h.starId || null
     }));
 
+    const mapUUIDToSave = currentMapUUID || null;
+
     return {
       version: 2,
-      mapUUID: currentMapUUID,          // ✅ required
+      mapUUID: mapUUIDToSave,     // ✅ flat/legacy field for sessions
+
+      // ✅ ALSO store in your normal nested shape for consistency
+      __meq_appendix: {
+        uuid: mapUUIDToSave
+      },
+
       saveTimeISO: nowISO,
       sessionStartISO: sessionStartISO,
       totalSessionMs: totalSessionMs,
@@ -3735,6 +3751,7 @@ function saveCurrentCatalog(){
       homeworlds: homeworlds,
       lastSelectedPrimaryId: currentObjectPrimaryId || null
     };
+
   }
 
   function downloadJSON(obj, filename){
