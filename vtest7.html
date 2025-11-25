@@ -3294,146 +3294,202 @@ function refreshStarmapList() {
   if (!starmapListEl) return;
   starmapListEl.innerHTML = '<div style="color:#888;">Loading list...</div>';
 
-  // --- Patch cacheBust so it ignores blob: URLs (fixes net::ERR_FILE_NOT_FOUND on blob) ---
+  // ------------------------------------------------------------
+  // 1) Patch cacheBust so it NEVER touches blob: URLs
+  // ------------------------------------------------------------
   try {
     if (typeof window !== "undefined" &&
-        typeof cacheBust === "function" &&
-        !window.__cacheBustPatchedForBlob) {
-      window.__origCacheBust = cacheBust;
-      cacheBust = function (url) {
-        if (url && typeof url === "string" && url.indexOf("blob:") === 0) {
-          // Don't append ?ts=... to blob URLs
+        typeof window.cacheBust === "function" &&
+        !window.__meqOriginalCacheBust) {
+      window.__meqOriginalCacheBust = window.cacheBust;
+      window.cacheBust = function (url) {
+        if (!url) return url;
+        // Don't append ?ts to blob: URLs
+        if (typeof url === "string" && url.indexOf("blob:") === 0) {
           return url;
         }
-        return window.__origCacheBust(url);
+        return window.__meqOriginalCacheBust
+          ? window.__meqOriginalCacheBust(url)
+          : url;
       };
-      window.__cacheBustPatchedForBlob = true;
     }
   } catch (e) {
-    // if anything weird happens, don't break the function
-    console.warn("cacheBust blob-patch failed:", e);
+    console.warn("MEQ cacheBust patch failed:", e);
   }
 
-  // --- Helper: rewrite GitHub release URLs to raw GitHub URLs ---
-  function rewriteToRawUrl(url) {
-    if (!url) return url;
-    const ghPrefix = "https://github.com/cybershrapnel/skybox/releases/download/starmaps/";
-    if (url.startsWith(ghPrefix)) {
-      const filename = url.substring(ghPrefix.length);
-      return "https://raw.githubusercontent.com/cybershrapnel/skybox/refs/heads/master/starmaps/" + filename;
+  // ------------------------------------------------------------
+  // 2) Patch jQuery so it does NOT add ?_= cache-buster to blob:
+  // ------------------------------------------------------------
+  try {
+    if (window.jQuery && !window.__meqBlobAjaxPrefilterInstalled) {
+      window.jQuery.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+        var u = (options && options.url) ||
+                (originalOptions && originalOptions.url) ||
+                "";
+        if (typeof u === "string" && u.indexOf("blob:") === 0) {
+          // Force cache = true to avoid jQuery's anti-cache ?_= param
+          options.cache = true;
+        }
+      });
+      window.__meqBlobAjaxPrefilterInstalled = true;
     }
-    return url;
+  } catch (e) {
+    console.warn("MEQ jQuery blob prefilter patch failed:", e);
   }
 
-  // --- Helper: do we treat this URL as a chunked starmap? ---
-  function isChunkedStarmapUrl(url) {
-    if (!url) return false;
-    // Any .txt in starmaps is treated as chunked (.meq + .Sxx)
-    return url.toLowerCase().endsWith(".txt");
+  // ------------------------------------------------------------
+  // 3) Helper: map any txt URL -> .meq + .Sxx base
+  // ------------------------------------------------------------
+  function getChunkMappingFromUrl(originalUrl) {
+    if (!originalUrl || typeof originalUrl !== "string") return null;
+
+    var url = originalUrl;
+
+    // Rewrite GitHub release URL -> raw GitHub URL
+    var ghReleasePrefix = "https://github.com/cybershrapnel/skybox/releases/download/starmaps/";
+    var ghRawPrefix     = "https://raw.githubusercontent.com/cybershrapnel/skybox/refs/heads/master/starmaps/";
+    if (url.indexOf(ghReleasePrefix) === 0) {
+      url = ghRawPrefix + url.substring(ghReleasePrefix.length);
+    }
+
+    // Split path & filename
+    var lastSlash = url.lastIndexOf("/");
+    if (lastSlash === -1) return null;
+    var basePath  = url.substring(0, lastSlash + 1);      // includes trailing /
+    var fileName  = url.substring(lastSlash + 1);         // e.g. Galactic-Sector-2.txt
+
+    if (!fileName) return null;
+
+    // Your Python script names:
+    //   original:  Galactic-Sector-2.txt
+    //   meq:       Galactic-Sector-2.txt.meq
+    //   chunks:    Galactic-Sector-2.txt.S01, .S02, ...
+    var meqUrl        = basePath + fileName + ".meq";
+    var segmentPrefix = basePath + fileName + ".S";       // append 01, 02, ...
+
+    return {
+      originalUrl: url,
+      meqUrl: meqUrl,
+      segmentPrefix: segmentPrefix
+    };
   }
 
-  // --- Helper: load starmap from .meq + .Sxx pieces and call loadCatalogFromURL() ---
-  function loadStarmapFromChunks(baseTxtUrl) {
-    // baseTxtUrl: e.g. https://raw.githubusercontent.com/.../starmaps/Galactic-Sector-2.txt
-    const meqUrl = cacheBust(baseTxtUrl + ".meq");
+  // ------------------------------------------------------------
+  // 4) Loader: fetch .meq + .Sxx pieces, stitch, pass blob to loadCatalogFromURL
+  // ------------------------------------------------------------
+  function loadChunkedStarmapFromUrl(originalUrl) {
+    var mapping = getChunkMappingFromUrl(originalUrl);
 
-    fetch(meqUrl, { cache: "no-store" })
+    // If we can't map it, fall back to normal behavior
+    if (!mapping) {
+      if (typeof window.loadCatalogFromURL === "function") {
+        window.loadCatalogFromURL(originalUrl, true);
+      } else {
+        console.error("loadCatalogFromURL not found.");
+      }
+      return;
+    }
+
+    var meqUrl = mapping.meqUrl;
+
+    // Step 1: fetch the .meq file
+    fetch(cacheBust(meqUrl), { cache: "no-store" })
       .then(function (r) {
-        if (!r.ok) {
-          throw new Error("MEQ HTTP error " + r.status);
-        }
-        return r.json();
+        if (!r.ok) throw new Error("Failed to fetch MEQ: " + meqUrl);
+        return r.text();
       })
-      .then(function (meqData) {
-        const segCount = meqData && typeof meqData.__meq_segment_count === "number"
-          ? meqData.__meq_segment_count
-          : 0;
-
-        if (!segCount) {
-          throw new Error("No __meq_segment_count found in MEQ file");
+      .then(function (meqText) {
+        // Parse to read chunk count we injected in Python
+        var chunkCount = 0;
+        try {
+          var meqJson = JSON.parse(meqText);
+          if (meqJson && typeof meqJson === "object") {
+            if (typeof meqJson.__meq_chunk_count === "number") {
+              chunkCount = meqJson.__meq_chunk_count;
+            } else if (
+              meqJson.__meq_appendix &&
+              typeof meqJson.__meq_appendix.__meq_chunk_count === "number"
+            ) {
+              chunkCount = meqJson.__meq_appendix.__meq_chunk_count;
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to parse .meq JSON; treating as 0 chunks.", e);
         }
 
-        const segPromises = [];
-        for (let i = 1; i <= segCount; i++) {
-          const suffix = ".S" + String(i).padStart(2, "0"); // .S01, .S02, ...
-          const segUrl = cacheBust(baseTxtUrl + suffix);
-          segPromises.push(
-            fetch(segUrl, { cache: "no-store" }).then(function (r) {
-              if (!r.ok) {
-                throw new Error("Segment " + i + " HTTP error " + r.status);
-              }
-              return r.arrayBuffer();
-            })
+        if (!chunkCount || chunkCount < 0) {
+          // No chunk info → assume original .txt exists, just fall back
+          console.warn("No valid __meq_chunk_count found, using direct URL instead:", originalUrl);
+          if (typeof window.loadCatalogFromURL === "function") {
+            window.loadCatalogFromURL(mapping.originalUrl, true);
+          }
+          return;
+        }
+
+        // Step 2: fetch all .Sxx pieces in parallel
+        var segmentPromises = [];
+        for (var i = 1; i <= chunkCount; i++) {
+          var idx = String(i).padStart(2, "0"); // S01, S02, ...
+          var segUrl = mapping.segmentPrefix + idx;
+          segmentPromises.push(
+            fetch(cacheBust(segUrl), { cache: "no-store" })
+              .then(function (resp) {
+                if (!resp.ok) throw new Error("Failed to fetch segment: " + resp.url);
+                return resp.text();
+              })
           );
         }
 
-        return Promise.all(segPromises).then(function (buffers) {
-          return { meqData, buffers };
-        });
-      })
-      .then(function (bundle) {
-        const meqData = bundle.meqData || {};
-        const buffers = bundle.buffers || [];
+        return Promise.all(segmentPromises)
+          .then(function (segmentTexts) {
+            // Step 3: rebuild full JSON:
+            //   [S01 + S02 + ... + SNN] + [.meq contents at the end]
+            var combinedText = segmentTexts.join("") + meqText;
 
-        // Concatenate all bytes in order
-        let totalLen = 0;
-        buffers.forEach(function (buf) { totalLen += buf.byteLength; });
+            var blob = new Blob([combinedText], { type: "application/json" });
+            var blobUrl = URL.createObjectURL(blob);
 
-        const allBytes = new Uint8Array(totalLen);
-        let offset = 0;
-        buffers.forEach(function (buf) {
-          const chunkBytes = new Uint8Array(buf);
-          allBytes.set(chunkBytes, offset);
-          offset += chunkBytes.length;
-        });
-
-        // Decode full JSON text once
-        const decoder = new TextDecoder("utf-8");
-        const mainJsonText = decoder.decode(allBytes);
-
-        let mainObj;
-        try {
-          mainObj = JSON.parse(mainJsonText);
-        } catch (e) {
-          console.error("Failed to parse main starmap JSON from chunks:", e);
-          throw e;
-        }
-
-        // Merge: chunks first, MEQ fields appended last
-        const finalObj = Object.assign({}, mainObj, meqData);
-        const finalText = JSON.stringify(finalObj);
-
-        const blob = new Blob([finalText], { type: "application/json" });
-        const blobUrl = URL.createObjectURL(blob);
-
-        // IMPORTANT: loadCatalogFromURL will still call cacheBust,
-        // but cacheBust now returns blob: URLs unchanged.
-        loadCatalogFromURL(blobUrl, true);
+            // Hand off to your existing loader
+            if (typeof window.loadCatalogFromURL === "function") {
+              window.loadCatalogFromURL(blobUrl, true);
+            } else {
+              console.error("loadCatalogFromURL not found when loading blob starmap.");
+            }
+          });
       })
       .catch(function (err) {
-        console.error("Failed to load chunked starmap:", err);
-        alert("Failed to load starmap from chunks: " + err.message);
+        console.error("Chunked starmap load failed, falling back to direct URL:", err);
+        if (typeof window.loadCatalogFromURL === "function") {
+          window.loadCatalogFromURL(mapping.originalUrl || originalUrl, true);
+        }
       });
   }
 
-  // Helper to append one row
+  // ------------------------------------------------------------
+  // 5) Helper: render one row in the UI
+  // ------------------------------------------------------------
   function appendStarmapRow(opts) {
-    const { name, url, size, fromArchive } = opts;
+    var name = opts.name;
+    var url = opts.url;
+    var size = opts.size;
+    var fromArchive = opts.fromArchive;
+
     if (!url) return;
 
-    const row = document.createElement("div");
+    var row = document.createElement("div");
     row.className = "starmap-item";
     row.innerHTML =
       '<span class="starmap-name"></span>' +
       '<span class="starmap-size"></span>';
 
-    const nameSpan = row.querySelector(".starmap-name");
-    const sizeSpan = row.querySelector(".starmap-size");
+    var nameSpan = row.querySelector(".starmap-name");
+    var sizeSpan = row.querySelector(".starmap-size");
 
     nameSpan.textContent = name || (url.split("/").pop() || "unknown.txt");
 
+    // Tiny icon for archive maps
     if (fromArchive) {
-      const icon = document.createElement("span");
+      var icon = document.createElement("span");
       icon.className = "starmap-archive-icon";
       icon.textContent = "📦";
       nameSpan.appendChild(icon);
@@ -3443,77 +3499,75 @@ function refreshStarmapList() {
 
     row.dataset.url = url;
     row.onclick = function () {
-      const targetUrl = row.dataset.url;
-      if (isChunkedStarmapUrl(targetUrl)) {
-        loadStarmapFromChunks(targetUrl);
-      } else {
-        loadCatalogFromURL(targetUrl, true);
-      }
+      // Always go through chunked loader, it will decide whether to fall back
+      loadChunkedStarmapFromUrl(url);
     };
 
     starmapListEl.appendChild(row);
   }
 
-  // Load the PHP list (live / server-generated)
+  // ------------------------------------------------------------
+  // 6) Load PHP list (live / server-generated)
+  // ------------------------------------------------------------
   function loadPhpList() {
     fetch(cacheBust(STARMAP_INDEX_URL), { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (items) {
         if (!items || !items.length) {
           if (!starmapListEl.innerHTML.trim()) {
-            starmapListEl.innerHTML = '<div style="color:#888;">No starmaps found.</div>';
+            starmapListEl.innerHTML =
+              '<div style="color:#888;">No starmaps found.</div>';
           }
           return;
         }
 
         items.forEach(function (it) {
-          let url = (typeof it === "string") ? it : it.url;
-          url = rewriteToRawUrl(url);
-
-          const name = (typeof it === "string")
-            ? (url.split("/").pop())
+          var url = (typeof it === "string") ? it : it.url;
+          var name = (typeof it === "string")
+            ? (it.split("/").pop())
             : (it.name || (url ? url.split("/").pop() : "unknown.txt"));
 
-          const size = (typeof it === "string")
+          var size = (typeof it === "string")
             ? ""
             : (it.size != null ? prettyBytes(it.size) : "");
 
           appendStarmapRow({
-            name,
-            url,
-            size,
+            name: name,
+            url: url,
+            size: size,
             fromArchive: false
           });
         });
       })
       .catch(function () {
         if (!starmapListEl.innerHTML.trim()) {
-          starmapListEl.innerHTML = '<div style="color:#f88;">Failed to load server list.</div>';
+          starmapListEl.innerHTML =
+            '<div style="color:#f88;">Failed to load server list.</div>';
         }
       });
   }
 
-  // Load ARCHIVE list first (your 40k/83k/90k/etc JSON)
+  // ------------------------------------------------------------
+  // 7) Load ARCHIVE list first (40k/83k/90k etc JSON)
+  // ------------------------------------------------------------
   fetch(cacheBust(STARMAP_ARCHIVE_INDEX_URL), { cache: "no-store" })
     .then(function (r) {
       if (!r.ok) throw new Error("Archive HTTP error");
       return r.json();
     })
     .then(function (archiveItems) {
-      starmapListEl.innerHTML = "";  // clear "Loading..."
+      starmapListEl.innerHTML = ""; // clear "Loading..."
 
       if (Array.isArray(archiveItems) && archiveItems.length) {
         archiveItems.forEach(function (it) {
-          let url = it.url;
-          url = rewriteToRawUrl(url);
-
-          const name = it.filename || (url ? url.split("/").pop() : "unknown.txt");
-          const size = it.size || "";
+          var url = it.url;
+          var name = it.filename || (url ? url.split("/").pop() : "unknown.txt");
+          var size = it.size || ""; // already human-readable (e.g. "210 MB")
 
           appendStarmapRow({
-            name,
-            url,
-            size,
+            name: name,
+            url: url,
+            size: size,
             fromArchive: true
           });
         });
@@ -3521,11 +3575,13 @@ function refreshStarmapList() {
     })
     .catch(function (err) {
       console.warn("Archive list failed:", err);
+      // leave "Loading..." text; PHP load will overwrite
     })
     .finally(function () {
       loadPhpList();
     });
 }
+
 
 
 
