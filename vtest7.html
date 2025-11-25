@@ -3304,9 +3304,8 @@ function refreshStarmapList() {
       window.__meqOriginalCacheBust = window.cacheBust;
       window.cacheBust = function (url) {
         if (!url) return url;
-        // Don't append ?ts to blob: URLs
         if (typeof url === "string" && url.indexOf("blob:") === 0) {
-          return url;
+          return url; // don't append ?ts to blob:
         }
         return window.__meqOriginalCacheBust
           ? window.__meqOriginalCacheBust(url)
@@ -3318,23 +3317,68 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 2) Patch jQuery so it does NOT add ?_= cache-buster to blob:
+  // 2) HARD PATCH: hijack $.ajax for blob: URLs so jQuery
+  //    never appends ?_= or touches them.
   // ------------------------------------------------------------
   try {
-    if (window.jQuery && !window.__meqBlobAjaxPrefilterInstalled) {
-      window.jQuery.ajaxPrefilter(function (options, originalOptions, jqXHR) {
-        var u = (options && options.url) ||
-                (originalOptions && originalOptions.url) ||
-                "";
-        if (typeof u === "string" && u.indexOf("blob:") === 0) {
-          // Force cache = true to avoid jQuery's anti-cache ?_= param
-          options.cache = true;
+    if (window.jQuery && !window.__meqAjaxBlobPatched) {
+      var $ = window.jQuery;
+      var oldAjax = $.ajax;
+
+      $.ajax = function () {
+        var args = Array.prototype.slice.call(arguments);
+        var opts;
+
+        // Support both $.ajax(url, options) and $.ajax(options)
+        if (typeof args[0] === "string") {
+          opts = args[1] || {};
+          opts.url = args[0];
+        } else {
+          opts = args[0] || {};
         }
-      });
-      window.__meqBlobAjaxPrefilterInstalled = true;
+
+        var u = opts.url || "";
+        if (typeof u === "string" && u.indexOf("blob:") === 0) {
+          // Handle blob: URL manually with fetch
+          var dfd = $.Deferred();
+          var dataType = (opts.dataType || "").toLowerCase();
+
+          fetch(u)
+            .then(function (resp) {
+              if (!resp.ok) throw new Error("HTTP " + resp.status);
+              if (dataType === "json") return resp.json();
+              return resp.text();
+            })
+            .then(function (data) {
+              if (typeof opts.success === "function") {
+                opts.success(data, "success", null);
+              }
+              if (typeof opts.complete === "function") {
+                opts.complete(null, "success");
+              }
+              dfd.resolve(data, "success", null);
+            })
+            .catch(function (err) {
+              if (typeof opts.error === "function") {
+                opts.error(null, "error", err);
+              }
+              if (typeof opts.complete === "function") {
+                opts.complete(null, "error");
+              }
+              dfd.reject(null, "error", err);
+            });
+
+          return dfd.promise();
+        }
+
+        // Non-blob: → fall back to original jQuery ajax
+        return oldAjax.apply($, args);
+      };
+
+      window.__meqAjaxBlobPatched = true;
     }
   } catch (e) {
-    console.warn("MEQ jQuery blob prefilter patch failed:", e);
+    console.warn("MEQ $.ajax blob patch failed:", e);
   }
 
   // ------------------------------------------------------------
@@ -3352,20 +3396,20 @@ function refreshStarmapList() {
       url = ghRawPrefix + url.substring(ghReleasePrefix.length);
     }
 
-    // Split path & filename
     var lastSlash = url.lastIndexOf("/");
     if (lastSlash === -1) return null;
-    var basePath  = url.substring(0, lastSlash + 1);      // includes trailing /
-    var fileName  = url.substring(lastSlash + 1);         // e.g. Galactic-Sector-2.txt
+
+    var basePath = url.substring(0, lastSlash + 1); // includes trailing /
+    var fileName = url.substring(lastSlash + 1);    // e.g. Galactic-Sector-2.txt
 
     if (!fileName) return null;
 
-    // Your Python script names:
+    // Python script naming:
     //   original:  Galactic-Sector-2.txt
     //   meq:       Galactic-Sector-2.txt.meq
     //   chunks:    Galactic-Sector-2.txt.S01, .S02, ...
     var meqUrl        = basePath + fileName + ".meq";
-    var segmentPrefix = basePath + fileName + ".S";       // append 01, 02, ...
+    var segmentPrefix = basePath + fileName + ".S";
 
     return {
       originalUrl: url,
@@ -3375,7 +3419,7 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 4) Loader: fetch .meq + .Sxx pieces, stitch, pass blob to loadCatalogFromURL
+  // 4) Loader: fetch .meq + .Sxx pieces, stitch, pass blob URL
   // ------------------------------------------------------------
   function loadChunkedStarmapFromUrl(originalUrl) {
     var mapping = getChunkMappingFromUrl(originalUrl);
@@ -3399,7 +3443,7 @@ function refreshStarmapList() {
         return r.text();
       })
       .then(function (meqText) {
-        // Parse to read chunk count we injected in Python
+        // Read chunk count
         var chunkCount = 0;
         try {
           var meqJson = JSON.parse(meqText);
@@ -3418,7 +3462,6 @@ function refreshStarmapList() {
         }
 
         if (!chunkCount || chunkCount < 0) {
-          // No chunk info → assume original .txt exists, just fall back
           console.warn("No valid __meq_chunk_count found, using direct URL instead:", originalUrl);
           if (typeof window.loadCatalogFromURL === "function") {
             window.loadCatalogFromURL(mapping.originalUrl, true);
@@ -3442,14 +3485,13 @@ function refreshStarmapList() {
 
         return Promise.all(segmentPromises)
           .then(function (segmentTexts) {
-            // Step 3: rebuild full JSON:
-            //   [S01 + S02 + ... + SNN] + [.meq contents at the end]
+            // Order preserved by Promise.all → S01, S02, ... SNN
             var combinedText = segmentTexts.join("") + meqText;
 
             var blob = new Blob([combinedText], { type: "application/json" });
             var blobUrl = URL.createObjectURL(blob);
 
-            // Hand off to your existing loader
+            // Hand off to your existing loader (now with blob-safe $.ajax)
             if (typeof window.loadCatalogFromURL === "function") {
               window.loadCatalogFromURL(blobUrl, true);
             } else {
@@ -3487,7 +3529,6 @@ function refreshStarmapList() {
 
     nameSpan.textContent = name || (url.split("/").pop() || "unknown.txt");
 
-    // Tiny icon for archive maps
     if (fromArchive) {
       var icon = document.createElement("span");
       icon.className = "starmap-archive-icon";
@@ -3499,7 +3540,6 @@ function refreshStarmapList() {
 
     row.dataset.url = url;
     row.onclick = function () {
-      // Always go through chunked loader, it will decide whether to fall back
       loadChunkedStarmapFromUrl(url);
     };
 
@@ -3548,7 +3588,7 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 7) Load ARCHIVE list first (40k/83k/90k etc JSON)
+  // 7) Load ARCHIVE list first
   // ------------------------------------------------------------
   fetch(cacheBust(STARMAP_ARCHIVE_INDEX_URL), { cache: "no-store" })
     .then(function (r) {
@@ -3562,7 +3602,7 @@ function refreshStarmapList() {
         archiveItems.forEach(function (it) {
           var url = it.url;
           var name = it.filename || (url ? url.split("/").pop() : "unknown.txt");
-          var size = it.size || ""; // already human-readable (e.g. "210 MB")
+          var size = it.size || "";
 
           appendStarmapRow({
             name: name,
@@ -3575,13 +3615,11 @@ function refreshStarmapList() {
     })
     .catch(function (err) {
       console.warn("Archive list failed:", err);
-      // leave "Loading..." text; PHP load will overwrite
     })
     .finally(function () {
       loadPhpList();
     });
 }
-
 
 
 
