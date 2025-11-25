@@ -670,6 +670,11 @@
 .vd-parent-star-btn:hover{
   background: rgba(120,200,255,0.25);
 }
+.starmap-archive-icon {
+  margin-left: 4px;
+  font-size: 11px;
+  opacity: 0.8;
+}
 
   </style>
 </head>
@@ -3051,6 +3056,9 @@ if (parentBtn) {
   const starmapListEl    = document.getElementById("starmapList");
 
   const STARMAP_INDEX_URL = "https://xtdevelopment.net/chat-proxy/starmaps/starmaps.php";
+
+  const STARMAP_ARCHIVE_INDEX_URL = "https://xtdevelopment.net/chat-proxy/starmaps/archive-starmaps.json";
+
   // ✅ remember last loaded catalog for saving
 let lastCatalogURL = DEFAULT_CATALOG_URL;
 let lastCatalogLabel = "server_catalog";
@@ -3282,48 +3290,119 @@ let lastCatalogRawURL  = null;
     });
   }
 
-  function refreshStarmapList() {
-    if (!starmapListEl) return;
-    starmapListEl.innerHTML = '<div style="color:#888;">Loading list...</div>';
+function refreshStarmapList() {
+  if (!starmapListEl) return;
+  starmapListEl.innerHTML = '<div style="color:#888;">Loading list...</div>';
 
+  // Helper to append one row
+  function appendStarmapRow(opts) {
+    const { name, url, size, fromArchive } = opts;
+    if (!url) return;
+
+    const row = document.createElement("div");
+    row.className = "starmap-item";
+    row.innerHTML =
+      '<span class="starmap-name"></span>' +
+      '<span class="starmap-size"></span>';
+
+    const nameSpan = row.querySelector(".starmap-name");
+    const sizeSpan = row.querySelector(".starmap-size");
+
+    nameSpan.textContent = name || (url.split("/").pop() || "unknown.txt");
+
+    // ✅ tiny icon for archive maps
+    if (fromArchive) {
+      const icon = document.createElement("span");
+      icon.className = "starmap-archive-icon";
+      icon.textContent = "📦";      // <- change if you want a different icon
+      nameSpan.appendChild(icon);
+    }
+
+    sizeSpan.textContent = size || "";
+
+    row.dataset.url = url;
+    row.onclick = function () {
+      loadCatalogFromURL(url, true);
+    };
+
+    starmapListEl.appendChild(row);
+  }
+
+  // Load the PHP list (live / server-generated)
+  function loadPhpList() {
     fetch(cacheBust(STARMAP_INDEX_URL), { cache: "no-store" })
-      .then(function(r){ return r.json(); })
-      .then(function(items){
-        starmapListEl.innerHTML = "";
-
+      .then(function (r) { return r.json(); })
+      .then(function (items) {
         if (!items || !items.length) {
-          starmapListEl.innerHTML = '<div style="color:#888;">No starmaps found.</div>';
+          if (!starmapListEl.innerHTML.trim()) {
+            starmapListEl.innerHTML = '<div style="color:#888;">No starmaps found.</div>';
+          }
           return;
         }
 
-        items.forEach(function(it){
-          var url  = (typeof it === "string") ? it : it.url;
-          var name = (typeof it === "string")
+        items.forEach(function (it) {
+          const url = (typeof it === "string") ? it : it.url;
+          const name = (typeof it === "string")
             ? (it.split("/").pop())
             : (it.name || (url ? url.split("/").pop() : "unknown.txt"));
-          var size = (typeof it === "string") ? "" : prettyBytes(it.size);
 
-          if (!url) return;
+          // old PHP endpoint likely returns numeric bytes
+          const size = (typeof it === "string")
+            ? ""
+            : (it.size != null ? prettyBytes(it.size) : "");
 
-          var row = document.createElement("div");
-          row.className = "starmap-item";
-          row.innerHTML =
-            '<span class="starmap-name"></span>' +
-            '<span class="starmap-size"></span>';
-
-          row.querySelector(".starmap-name").textContent = name;
-          row.querySelector(".starmap-size").textContent = size;
-
-          row.dataset.url = url;
-          row.onclick = function(){ loadCatalogFromURL(url, true); };
-
-          starmapListEl.appendChild(row);
+          appendStarmapRow({
+            name,
+            url,
+            size,
+            fromArchive: false
+          });
         });
       })
-      .catch(function(){
-        starmapListEl.innerHTML = '<div style="color:#f88;">Failed to load list.</div>';
+      .catch(function () {
+        // If archive already drew something, don't nuke it
+        if (!starmapListEl.innerHTML.trim()) {
+          starmapListEl.innerHTML = '<div style="color:#f88;">Failed to load server list.</div>';
+        }
       });
   }
+
+  // Load ARCHIVE list first (your 40k/83k/90k/etc JSON)
+  fetch(cacheBust(STARMAP_ARCHIVE_INDEX_URL), { cache: "no-store" })
+    .then(function (r) {
+      if (!r.ok) throw new Error("Archive HTTP error");
+      return r.json();
+    })
+    .then(function (archiveItems) {
+      starmapListEl.innerHTML = "";  // clear "Loading..."
+
+      if (Array.isArray(archiveItems) && archiveItems.length) {
+        archiveItems.forEach(function (it) {
+          // matches the structure you pasted:
+          // { filename, url, size: "210 MB", sha256: "..." }
+          const url = it.url;
+          const name = it.filename || (url ? url.split("/").pop() : "unknown.txt");
+          const size = it.size || "";  // already human-readable ("210 MB")
+
+          appendStarmapRow({
+            name,
+            url,
+            size,
+            fromArchive: true
+          });
+        });
+      }
+    })
+    .catch(function (err) {
+      console.warn("Archive list failed:", err);
+      // leave "Loading..." text in place; PHP load will overwrite
+    })
+    .finally(function () {
+      // ✅ Only after archive attempt do we hit your PHP server
+      loadPhpList();
+    });
+}
+
 
   function loadInitialCatalog() {
     var hashURL = getHashCatalogURL();
