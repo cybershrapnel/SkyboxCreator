@@ -3816,118 +3816,144 @@ if (saveCatalogBtn) {
 }
 
   
-  function applyLoadedStateNow(state){
-    if (!state || typeof state !== "object") return;
+function applyLoadedStateNow(state){
+  if (!state || typeof state !== "object") return;
 
-const stateUUID = (
-  state.uuid ||
-  state.mapUUID ||
-  (state.__meq_appendix && state.__meq_appendix.uuid) ||
-  state.catalogUUID ||
-  (state.meta && (state.meta.uuid || state.meta.mapUUID)) ||
-  null
-);
-console.log("[MEQ] Session load attempt:");
-console.log("      currentMapUUID =", currentMapUUID);
-console.log("      sessionUUID    =", stateUUID);
+  var stateUUID =
+    (state.__meq_appendix && state.__meq_appendix.uuid) ||
+    state.mapUUID ||
+    state.uuid ||
+    state.catalogUUID ||
+    (state.meta && (state.meta.uuid || state.meta.mapUUID)) ||
+    null;
 
-if (!currentMapUUID) {
-  console.warn("[MEQ] Current map UUID is NULL -> skipping mismatch validation.");
-}
+  console.log("[MEQ] Session load attempt:");
+  console.log("      currentMapUUID =", currentMapUUID);
+  console.log("      sessionUUID    =", stateUUID);
 
-// ✅ HARD FAIL: session must always have a uuid
-if (!stateUUID) {
-  console.warn("Session file has NULL/empty uuid. Aborting load.");
-  alert("Session file has no UUID. Load aborted.");
-  return;
-}
+  // 🔒 RULE 1: map has NO UUID, session HAS UUID -> ABORT
+  if (!currentMapUUID && stateUUID) {
+    console.warn(
+      "[MEQ] ABORT: Map has NO UUID, but session has UUID:", stateUUID
+    );
+    alert(
+      "This session is bound to map UUID:\n" +
+      stateUUID +
+      "\n\nCurrent map has no UUID. Load aborted."
+    );
+    return;
+  }
 
+  // 🔒 RULE 2: map HAS UUID, session has NO UUID -> ABORT
+  if (currentMapUUID && !stateUUID) {
+    console.warn(
+      "[MEQ] ABORT: Map has UUID (" + currentMapUUID + ") but session has NO UUID."
+    );
+    alert("Session file has no map UUID. Load aborted.");
+    return;
+  }
 
-    // ✅ strict match if both exist
-    if (currentMapUUID && stateUUID && String(stateUUID) !== String(currentMapUUID)) {
-      console.warn("Session map UUID mismatch:", stateUUID, "!= ", currentMapUUID);
-      alert("That session belongs to a different map. Load aborted.");
-      return; // ✅ NO PARTIAL APPLY
-    }
+  // 🔒 RULE 3: both have UUID but they DON'T match -> ABORT
+  if (currentMapUUID && stateUUID &&
+      String(stateUUID) !== String(currentMapUUID)) {
+    console.warn(
+      "[MEQ] ABORT: Map/session UUID mismatch. session =",
+      stateUUID, " map =", currentMapUUID
+    );
+    alert(
+      "That session belongs to a different map.\n\n" +
+      "Session UUID: " + stateUUID + "\n" +
+      "Current Map UUID: " + currentMapUUID + "\n\n" +
+      "Load aborted."
+    );
+    return;
+  }
 
-    // ✅ clear everything first, then apply
-    resetSessionState("session-load");
+  console.log("[MEQ] UUID check passed; applying session state…");
 
-    totalSessionMsAccum = Math.max(0, Number(state.totalSessionMs) || 0);
-    sessionStartWallMs = Date.now();
+  // ✅ FROM HERE DOWN: keep your existing logic
+  // (resetSessionState, restoring renames, visited, colonies, homeworlds, etc.)
 
-    totalTravelDistanceLy = Number(state.totalTravelDistanceLy) || 0;
+  resetSessionState("session-load");
 
-    renamedById = state.renames && typeof state.renames === "object" ? state.renames : {};
-    for (const pid in renamedById) {
+  totalSessionMsAccum = Math.max(0, Number(state.totalSessionMs) || 0);
+  sessionStartWallMs = Date.now();
+
+  totalTravelDistanceLy = Number(state.totalTravelDistanceLy) || 0;
+
+  renamedById = state.renames && typeof state.renames === "object" ? state.renames : {};
+  for (var pid in renamedById) {
+    if (renamedById.hasOwnProperty(pid)) {
       applyRenameToData(pid, renamedById[pid]);
     }
-
-    visitedLog = [];
-    visitedById = {};
-    if (Array.isArray(state.visited)) {
-      state.visited.forEach(v => {
-        if (!v || v.primaryId == null) return;
-        const pid = String(v.primaryId);
-        visitedById[pid] = {
-          primaryId: pid,
-          type: v.type || "OBJECT",
-          isStar: !!v.isStar,
-          name: v.name || ("Object " + pid),
-          meshRef: resolveMeshByPrimaryId(pid),
-          legLy: Number(v.legLy) || 0,
-          starId: v.starId || null
-        };
-        visitedLog.push(visitedById[pid]);
-      });
-    }
-    renderVisitedList();
-
-    colonyLog = [];
-    colonyById = {};
-    if (Array.isArray(state.colonies)) {
-      state.colonies.forEach(c => {
-        if (!c || c.primaryId == null) return;
-        const pid = String(c.primaryId);
-        colonyById[pid] = {
-          primaryId: pid,
-          type: c.type || "PLANET",
-          name: c.name || ("Colony " + pid),
-          meshRef: resolveMeshByPrimaryId(pid),
-          starId: c.starId || null
-        };
-        colonyLog.push(colonyById[pid]);
-      });
-    }
-    renderColonyList();
-
-    homeworldLog = [];
-    homeworldById = {};
-    if (Array.isArray(state.homeworlds)) {
-      state.homeworlds.forEach(h => {
-        if (!h || h.primaryId == null) return;
-        const pid = String(h.primaryId);
-        homeworldById[pid] = {
-          primaryId: pid,
-          type: h.type || "PLANET",
-          name: h.name || ("Homeworld " + pid),
-          meshRef: resolveMeshByPrimaryId(pid),
-          starId: h.starId || null
-        };
-        homeworldLog.push(homeworldById[pid]);
-      });
-    }
-    renderHomeworldList();
-
-    updateobjectData();
-    updateCatalogStats();
-    updateNearestStarsList(currentObjectMesh);
-    updateThroneworldDisplay();
-
-    if (state.lastSelectedPrimaryId != null) {
-      travelToPrimaryId(String(state.lastSelectedPrimaryId));
-    }
   }
+
+  visitedLog = [];
+  visitedById = {};
+  if (Object.prototype.toString.call(state.visited) === "[object Array]") {
+    state.visited.forEach(function(v){
+      if (!v || v.primaryId == null) return;
+      var vpid = String(v.primaryId);
+      visitedById[vpid] = {
+        primaryId: vpid,
+        type: v.type || "OBJECT",
+        isStar: !!v.isStar,
+        name: v.name || ("Object " + vpid),
+        meshRef: resolveMeshByPrimaryId(vpid),
+        legLy: Number(v.legLy) || 0,
+        starId: v.starId || null
+      };
+      visitedLog.push(visitedById[vpid]);
+    });
+  }
+  renderVisitedList();
+
+  colonyLog = [];
+  colonyById = {};
+  if (Object.prototype.toString.call(state.colonies) === "[object Array]") {
+    state.colonies.forEach(function(c){
+      if (!c || c.primaryId == null) return;
+      var cpid = String(c.primaryId);
+      colonyById[cpid] = {
+        primaryId: cpid,
+        type: c.type || "PLANET",
+        name: c.name || ("Colony " + cpid),
+        meshRef: resolveMeshByPrimaryId(cpid),
+        starId: c.starId || null
+      };
+      colonyLog.push(colonyById[cpid]);
+    });
+  }
+  renderColonyList();
+
+  homeworldLog = [];
+  homeworldById = {};
+  if (Object.prototype.toString.call(state.homeworlds) === "[object Array]") {
+    state.homeworlds.forEach(function(h){
+      if (!h || h.primaryId == null) return;
+      var hpid = String(h.primaryId);
+      homeworldById[hpid] = {
+        primaryId: hpid,
+        type: h.type || "PLANET",
+        name: h.name || ("Homeworld " + hpid),
+        meshRef: resolveMeshByPrimaryId(hpid),
+        starId: h.starId || null
+      };
+      homeworldLog.push(homeworldById[hpid]);
+    });
+  }
+  renderHomeworldList();
+
+  updateobjectData();
+  updateCatalogStats();
+  updateNearestStarsList(currentObjectMesh);
+  updateThroneworldDisplay();
+
+  if (state.lastSelectedPrimaryId != null) {
+    travelToPrimaryId(String(state.lastSelectedPrimaryId));
+  }
+}
+
 
 
 
