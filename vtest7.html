@@ -3731,26 +3731,22 @@ function saveCurrentCatalog(){
 
     const mapUUIDToSave = currentMapUUID || null;
 
-    return {
-      version: 2,
-      mapUUID: mapUUIDToSave,     // ✅ flat/legacy field for sessions
+return {
+  version: 2,
+  __meq_appendix: { uuid: currentMapUUID || null },
 
-      // ✅ ALSO store in your normal nested shape for consistency
-      __meq_appendix: {
-        uuid: mapUUIDToSave
-      },
+  saveTimeISO: nowISO,
+  sessionStartISO: sessionStartISO,
+  totalSessionMs: totalSessionMs,
+  totalTravelDistanceLy: totalTravelDistanceLy,
+  avgLyPerHour: avgLyPerHour,
+  renames: renamedById,
+  visited,
+  colonies,
+  homeworlds,
+  lastSelectedPrimaryId: currentObjectPrimaryId || null
+};
 
-      saveTimeISO: nowISO,
-      sessionStartISO: sessionStartISO,
-      totalSessionMs: totalSessionMs,
-      totalTravelDistanceLy: totalTravelDistanceLy,
-      avgLyPerHour: avgLyPerHour,
-      renames: renamedById,
-      visited: visited,
-      colonies: colonies,
-      homeworlds: homeworlds,
-      lastSelectedPrimaryId: currentObjectPrimaryId || null
-    };
 
   }
 
