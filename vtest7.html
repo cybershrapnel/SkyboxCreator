@@ -3382,10 +3382,6 @@ function refreshStarmapList() {
 
   // ------------------------------------------------------------
   // 3) Force URLs to the raw.githubusercontent.com form you specified
-  //    Example input:
-  //      https://github.com/cybershrapnel/skybox/releases/download/starmaps/Galactic-Sector-2.txt
-  //    Becomes:
-  //      https://raw.githubusercontent.com/cybershrapnel/skybox/refs/heads/master/starmaps/Galactic-Sector-2.txt
   // ------------------------------------------------------------
   function normalizeToRawUrl(url) {
     if (!url || typeof url !== "string") return url;
@@ -3414,7 +3410,6 @@ function refreshStarmapList() {
 
   // ------------------------------------------------------------
   // 4) Map raw URL -> .meq + .Sxx paths
-  //    We use the *normalized raw URL* here.
   // ------------------------------------------------------------
   function getChunkMappingFromUrl(originalUrl) {
     var rawUrl = normalizeToRawUrl(originalUrl);
@@ -3438,7 +3433,38 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 5) Loader: fetch .meq + .Sxx pieces, stitch, pass blob URL
+  // 5) INTERNAL: derive the segment count from the .meq JSON
+  //    Supports:
+  //      __meq_segment_count (preferred)
+  //      __meq_appendix.__meq_segment_count
+  //      __meq_chunk_count / __meq_appendix.__meq_chunk_count (legacy)
+  // ------------------------------------------------------------
+  function getSegmentCountFromMeqJson(meqJson) {
+    if (!meqJson || typeof meqJson !== "object") return 0;
+
+    // Preferred: segment naming
+    if (typeof meqJson.__meq_segment_count === "number") {
+      return meqJson.__meq_segment_count;
+    }
+    if (meqJson.__meq_appendix &&
+        typeof meqJson.__meq_appendix.__meq_segment_count === "number") {
+      return meqJson.__meq_appendix.__meq_segment_count;
+    }
+
+    // Legacy: chunk naming (fallback)
+    if (typeof meqJson.__meq_chunk_count === "number") {
+      return meqJson.__meq_chunk_count;
+    }
+    if (meqJson.__meq_appendix &&
+        typeof meqJson.__meq_appendix.__meq_chunk_count === "number") {
+      return meqJson.__meq_appendix.__meq_chunk_count;
+    }
+
+    return 0;
+  }
+
+  // ------------------------------------------------------------
+  // 6) Loader: fetch .meq + .Sxx pieces, stitch, pass blob URL
   //    We *never* fetch the .txt, only .meq and .Sxx on raw.
   // ------------------------------------------------------------
   function loadChunkedStarmapFromUrl(originalUrl) {
@@ -3463,28 +3489,19 @@ function refreshStarmapList() {
         return r.text();
       })
       .then(function (meqText) {
-        // Read chunk count from the .meq JSON
-        var chunkCount = 0;
+        // Read segment count from the .meq JSON
+        var segmentCount = 0;
         try {
           var meqJson = JSON.parse(meqText);
-          if (meqJson && typeof meqJson === "object") {
-            if (typeof meqJson.__meq_chunk_count === "number") {
-              chunkCount = meqJson.__meq_chunk_count;
-            } else if (
-              meqJson.__meq_appendix &&
-              typeof meqJson.__meq_appendix.__meq_chunk_count === "number"
-            ) {
-              chunkCount = meqJson.__meq_appendix.__meq_chunk_count;
-            }
-          }
+          segmentCount = getSegmentCountFromMeqJson(meqJson);
         } catch (e) {
-          console.warn("MEQ: failed to parse .meq JSON; treating as 0 chunks.", e);
+          console.warn("MEQ: failed to parse .meq JSON; treating as 0 segments.", e);
         }
 
-        console.log("MEQ: chunk count from .meq =", chunkCount);
+        console.log("MEQ: segment count from .meq =", segmentCount);
 
-        // If no chunks recorded, treat the .meq as the full file
-        if (!chunkCount || chunkCount < 1) {
+        // If no segments recorded, treat the .meq as the full file
+        if (!segmentCount || segmentCount < 1) {
           console.log("MEQ: no segments; using .meq as whole starmap");
           var blobNoSeg = new Blob([meqText], { type: "application/json" });
           var blobUrlNoSeg = URL.createObjectURL(blobNoSeg);
@@ -3498,7 +3515,7 @@ function refreshStarmapList() {
 
         // Step 2: fetch all .Sxx pieces in parallel from raw
         var segmentPromises = [];
-        for (var i = 1; i <= chunkCount; i++) {
+        for (var i = 1; i <= segmentCount; i++) {
           (function (iCopy) {
             var idx = String(iCopy).padStart(2, "0"); // S01, S02, ...
             var segUrl = mapping.segmentPrefix + idx;
@@ -3540,9 +3557,7 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 6) Helper: render one row in the UI
-  //    We *display* whatever, but clicks always use the RAW URL
-  //    (then chunk loader turns that into .meq + .Sxx).
+  // 7) Helper: render one row in the UI
   // ------------------------------------------------------------
   function appendStarmapRow(opts) {
     var name = opts.name;
@@ -3584,8 +3599,7 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 7) Load PHP list (live / server-generated)
-  //    URLs are normalized to raw before use.
+  // 8) Load PHP list (live / server-generated)
   // ------------------------------------------------------------
   function loadPhpList() {
     fetch(cacheBust(STARMAP_INDEX_URL), { cache: "no-store" })
@@ -3627,8 +3641,7 @@ function refreshStarmapList() {
   }
 
   // ------------------------------------------------------------
-  // 8) Load ARCHIVE list first (your JSON)
-  //    We normalize each to raw before wiring the click.
+  // 9) Load ARCHIVE list first (your JSON)
   // ------------------------------------------------------------
   fetch(cacheBust(STARMAP_ARCHIVE_INDEX_URL), { cache: "no-store" })
     .then(function (r) {
